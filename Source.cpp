@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "clHCA.h"
 #include "HCADecodeService.h"
 
@@ -102,7 +103,7 @@ int main(int argc, char *argv[]) {
                 FILE* outfile;
                 if (fopen_s(&outfile, filenameOut, "wb"))
                 {
-                    wavout.first; printf("Error: Failed to create WAVE file.\n");
+                    printf("Error: Failed to create WAVE file.\n");
                     dec.cancel_decode(wavout.first);
                     delete[] wavout.first;
                 }

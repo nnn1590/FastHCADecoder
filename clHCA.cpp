@@ -6,6 +6,7 @@
 #include "clHCA.h"
 #include <stdio.h>
 #include <memory.h>
+#include <string.h>
 #include <utility>
 
 //--------------------------------------------------
@@ -24,16 +25,11 @@ inline unsigned int ceil2(unsigned int a, unsigned int b) { return (b>0) ? (a / 
 // コンストラクタ
 //--------------------------------------------------
 clHCA::clHCA(unsigned int ciphKey1, unsigned int ciphKey2) :
-    _ciph_key1(ciphKey1), _ciph_key2(ciphKey2), _ath(), _cipher() {
-    hcafileptr = nullptr;
-}
+    _ciph_key1(ciphKey1), _ciph_key2(ciphKey2), _ath(), _cipher(), hcafileptr(nullptr) {}
 
 clHCA & clHCA::operator=(clHCA && other)
 {
-    if(hcafileptr != nullptr)
-    {
-        delete[] hcafileptr;
-    }
+    delete[] hcafileptr;
     hcafileptr = other.hcafileptr;
     other.hcafileptr = nullptr;
     _version = other._version;
@@ -78,10 +74,7 @@ clHCA & clHCA::operator=(clHCA && other)
 
 clHCA::~clHCA()
 {
-    if (hcafileptr != nullptr)
-    {
-        delete[] hcafileptr;
-    }
+    delete[] hcafileptr;
 }
 
 //--------------------------------------------------
@@ -223,7 +216,7 @@ bool clHCA::PrintInfo(const char *filenameHCA) {
         }
         printf("comp1: %d\n", _comp_r01);
         printf("comp2: %d\n", _comp_r02);
-        if (!(_comp_r01 >= 0 && _comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F)) {
+        if (!(/*_comp_r01 >= 0 &&*/ _comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F)) {
             printf("※ comp1とcomp2の範囲は0<=comp1<=comp2<=31です。v2.0現在、comp1は1、comp2は15で固定されています。\n");
         }
         printf("comp3: %d\n", _comp_r03);
@@ -258,7 +251,7 @@ bool clHCA::PrintInfo(const char *filenameHCA) {
         }
         printf("dec1: %d\n", _comp_r01);
         printf("dec2: %d\n", _comp_r02);
-        if (!(_comp_r01 >= 0 && _comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F)) {
+        if (!(/*_comp_r01 >= 0 &&*/ _comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F)) {
             printf("※ dec1とdec2の範囲は0<=dec1<=dec2<=31です。v2.0現在、dec1は1、dec2は15で固定されています。\n");
         }
         printf("dec3: %d\n", _comp_r03);
@@ -284,7 +277,7 @@ bool clHCA::PrintInfo(const char *filenameHCA) {
             printf("※ compまたはdecチャンクですでにCBRが指定されています。\n");
         }
         printf("vbr1: %d\n", _vbr_r01);
-        if (!(_vbr_r01 >= 0 && _vbr_r01 <= 0x1FF)) {
+        if (!(/*_vbr_r01 >= 0 &&*/ _vbr_r01 <= 0x1FF)) {
             printf("※ vbr1の範囲は0～511(0x1FF)です。\n");
         }
         printf("vbr2: %d\n", _vbr_r02);
@@ -315,7 +308,7 @@ bool clHCA::PrintInfo(const char *filenameHCA) {
         _loop_r01 = bswap(loop->r01);
         printf("ループ開始ブロック: %d\n", _loopStart);
         printf("ループ終了ブロック: %d\n", _loopEnd);
-        if (!(_loopStart >= 0 && _loopStart <= _loopEnd && _loopEnd<_blockCount)) {
+        if (!(/*_loopStart >= 0 &&*/ _loopStart <= _loopEnd && _loopEnd<_blockCount)) {
             printf("※ ループ開始ブロックとループ終了ブロックの範囲は、0<=ループ開始ブロック<=ループ終了ブロック<ブロック数 です。\n");
         }
         if (_loopCount == 0x80) {
@@ -574,7 +567,7 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
         unsigned int fmtSamplesPerSec;
         unsigned short fmtSamplingSize;
         unsigned short fmtBitCount;
-    }wavRiff = { 'R','I','F','F',0,'W','A','V','E','f','m','t',' ',0x10,0,0,0,0,0,0 };
+    }wavRiff = { {'R','I','F','F'},0,{'W','A','V','E'},{'f','m','t',' '},0x10,0,0,0,0,0,0 };
     struct stWAVEsmpl {
         char smpl[4];
         unsigned int smplSize;
@@ -593,16 +586,16 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
         unsigned int loop_End;
         unsigned int loop_Fraction;
         unsigned int loop_PlayCount;
-    }wavSmpl = { 's','m','p','l',0x3C,0,0,0,0x3C,0,0,0,1,0x18,0,0,0,0,0,0 };
+    }wavSmpl = { {'s','m','p','l'},0x3C,0,0,0,0x3C,0,0,0,1,0x18,0,0,0,0,0,0 };
     struct stWAVEnote {
         char note[4];
         unsigned int noteSize;
         unsigned int dwName;
-    }wavNote = { 'n','o','t','e',0,0 };
+    }wavNote = { {'n','o','t','e'},0,0 };
     struct stWAVEdata {
         char data[4];
         unsigned int dataSize;
-    }wavData = { 'd','a','t','a',0 };
+    }wavData = { {'d','a','t','a'},0 };
     wavRiff.fmtType = (mode>0) ? 1 : 3;
     wavRiff.fmtChannelCount = _channelCount;
     wavRiff.fmtBitCount = (mode>0) ? mode : 32;
@@ -889,14 +882,14 @@ void clHCA::clCipher::Init56(unsigned int key1, unsigned int key2) {
 
     // テーブル2
     unsigned char t2[0x10] = {
-        t1[1],t1[1] ^ t1[6],
-        t1[2] ^ t1[3],t1[2],
-        t1[2] ^ t1[1],t1[3] ^ t1[4],
-        t1[3],t1[3] ^ t1[2],
-        t1[4] ^ t1[5],t1[4],
-        t1[4] ^ t1[3],t1[5] ^ t1[6],
-        t1[5],t1[5] ^ t1[4],
-        t1[6] ^ t1[1],t1[6],
+        t1[1], static_cast<unsigned char>(t1[1] ^ t1[6]),
+        static_cast<unsigned char>(t1[2] ^ t1[3]),t1[2],
+        static_cast<unsigned char>(t1[2] ^ t1[1]),static_cast<unsigned char>(t1[3] ^ t1[4]),
+        t1[3],static_cast<unsigned char>(t1[3] ^ t1[2]),
+        static_cast<unsigned char>(t1[4] ^ t1[5]),t1[4],
+        static_cast<unsigned char>(t1[4] ^ t1[3]),static_cast<unsigned char>(t1[5] ^ t1[6]),
+        t1[5],static_cast<unsigned char>(t1[5] ^ t1[4]),
+        static_cast<unsigned char>(t1[6] ^ t1[1]),t1[6],
     };
 
     // テーブル3
@@ -1011,7 +1004,7 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
             _comp_r07 = comp->r07;
             _comp_r08 = comp->r08;
             if (!((_blockSize >= 8 && _blockSize <= 0xFFFF) || (_blockSize == 0)))return false;
-            if (!(_comp_r01 >= 0 && _comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F))return false;
+            if (!(_comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F))return false;
         }
 
         // dec
@@ -1027,7 +1020,7 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
             _comp_r07 = _comp_r05 - _comp_r06;
             _comp_r08 = 0;
             if (!((_blockSize >= 8 && _blockSize <= 0xFFFF) || (_blockSize == 0)))return false;
-            if (!(_comp_r01 >= 0 && _comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F))return false;
+            if (!(_comp_r01 <= _comp_r02 && _comp_r02 <= 0x1F))return false;
             if (!_comp_r03)_comp_r03 = 1;
         }
         else {
@@ -1039,7 +1032,7 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
             stVBR *vbr = (stVBR *)s; s += sizeof(stVBR);
             _vbr_r01 = bswap(vbr->r01);
             _vbr_r02 = bswap(vbr->r02);
-            if (!(_blockSize == 0 && _vbr_r01 >= 0 && _vbr_r01 <= 0x1FF))return false;
+            if (!(_blockSize == 0 && _vbr_r01 <= 0x1FF))return false;
         }
         else {
             _vbr_r01 = 0;
@@ -1063,7 +1056,7 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
             _loopCount = bswap(loop->count);
             _loop_r01 = bswap(loop->r01);
             _loopFlg = true;
-            if (!(_loopStart >= 0 && _loopStart <= _loopEnd && _loopEnd<_blockCount))return false;
+            if (!(_loopStart <= _loopEnd && _loopEnd<_blockCount))return false;
         }
         else {
             _loopStart = 0;
@@ -1371,7 +1364,8 @@ void clHCA::stChannel::Decode4(int index, unsigned int a, unsigned int b, unsign
         float *d = &this[1].block[b];
         for (unsigned int i = 0; i<a; i++) {
             *(d++) = *s*f2;
-            *(s++) = *s*f1;
+            const auto tmp = *s*f1;
+            *(s++) = tmp;
         }
     }
 }
