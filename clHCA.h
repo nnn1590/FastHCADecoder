@@ -136,6 +136,7 @@ private:
     unsigned int _ciph_key1;
     unsigned int _ciph_key2;
     float _rva_volume;
+	float _volume;
     unsigned int _comm_len;
     char *_comm_comment;
     class clATH {

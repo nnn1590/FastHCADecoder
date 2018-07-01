@@ -65,7 +65,7 @@ clHCA & clHCA::operator=(clHCA && other)
     _comm_len = other._comm_len;
     _ath = other._ath;
     _cipher = other._cipher;
-    _rva_volume = other._rva_volume;
+    _volume = other._volume;
     _mode = other._mode;
     _modeFunction = other._modeFunction;
     _wavheadersize = other._wavheadersize;
@@ -543,7 +543,7 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
         return false;
     }
 
-    _rva_volume = volume;
+    _volume = volume;
 
     // ヘッダ解析
     header.dataOffset = bswap(header.dataOffset);
@@ -699,7 +699,7 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*&
                     }
                     for (int j = 0; j < 0x80; j++) {
                         for (unsigned int k = 0; k < _channelCount; k++) {
-                            float f = channelsOffset[k].wave[i][j] * _rva_volume;
+                            float f = channelsOffset[k].wave[i][j] * _volume;
                             if (f > 1) { f = 1; }
                             else if (f < -1) { f = -1; }
                             if (blocknum + x < _loopStart)
