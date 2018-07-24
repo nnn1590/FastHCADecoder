@@ -11,18 +11,18 @@ public:
     Semaphore(int count_ = 0) : count(count_) {}
     Semaphore(unsigned int count_) : count(static_cast<int>(count_)) {}
 
-    inline void notify()
+    inline void notify(int n = 1)
     {
         std::unique_lock<std::mutex> lock(mtx);
-        ++count;
-        cv.notify_one();
+        count += n;
+		for(int i = 0; i < n; ++i) { cv.notify_one(); }
     }
 
-    inline void wait()
+    inline void wait(int n = 1)
     {
         std::unique_lock<std::mutex> lock(mtx);
-        cv.wait(lock, [this] { return count > 0; });
-        --count;
+        cv.wait(lock, [this] { return count >= n; });
+        count -= n;
     }
 
 private:
