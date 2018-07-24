@@ -230,14 +230,8 @@ void HCADecodeService::populate_block_list()
 
 void HCADecodeService::wait_on_all_threads(Semaphore& sem)
 {
-    for (unsigned int i = 0; i < numthreads; ++i)
-    {
-        sem.wait();
-    }
-    for (unsigned int i = 0; i < numthreads; ++i)
-    {
-        sem.notify();
-    }
+	sem.wait(numthreads);
+	sem.notify(numthreads);
 }
 
 void HCADecodeService::join_workers()
