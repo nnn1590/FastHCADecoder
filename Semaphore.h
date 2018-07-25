@@ -21,7 +21,14 @@ public:
     inline void wait(int n = 1)
     {
         std::unique_lock<std::mutex> lock(mtx);
-        cv.wait(lock,[this, n] { return count >= n;});
+        cv.wait(lock, [this, n] {
+            bool wake = count >= n;
+            if(!wake)
+            {
+                cv.notify_one();
+            }
+            return wake;
+        });
         count -= n;
     }
 
