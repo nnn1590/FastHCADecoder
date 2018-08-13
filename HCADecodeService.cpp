@@ -75,9 +75,8 @@ void HCADecodeService::cancel_decode(void* ptr)
     if (workingrequest == ptr)
     {
         workingrequest = nullptr;
+        wait_on_all_threads(wavoutsem);
     }
-
-    wait_on_all_threads(wavoutsem);
 }
 
 void HCADecodeService::wait_on_request(void* ptr)
@@ -112,7 +111,7 @@ void HCADecodeService::wait_on_request(void* ptr)
 void HCADecodeService::wait_for_finish()
 {
     filelistmtx.lock();
-    while(!filelist.empty() || workingrequest != nullptr)
+    while(!filelist.empty() || workingrequest)
     {
         filelistmtx.unlock();
         workingmtx.lock();
@@ -165,7 +164,7 @@ void HCADecodeService::Main_Thread()
 
         populate_block_list();
 
-        while(!blocks.empty())
+        while(!blocks.empty() && workingrequest)
         {
             mainsem.wait();
             for (unsigned int i = 0; i < numthreads; ++i)
@@ -221,6 +220,7 @@ void HCADecodeService::load_next_request()
 
 void HCADecodeService::populate_block_list()
 {
+    blocks.clear();
     unsigned int blockCount = workingfile.get_blockCount();
     int sz = blockCount / chunksize + (blockCount % chunksize != 0);
     unsigned int lim = sz * chunksize + startingblock;
