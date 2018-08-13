@@ -7,8 +7,6 @@
 #ifndef CLHCA_H
 #define CLHCA_H
 
-#include "Semaphore.h"
-
 // Copyright (c) 2017 にゃが
 
 //--------------------------------------------------
@@ -194,7 +192,7 @@ private:
     };
     bool PrepDecode(stChannel* channels, unsigned int numthreads);
     bool Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float volume = 1.0f, int mode = 16, int loop = 0);
-    void AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*& outputwavptr, unsigned int chunksize, Semaphore& wavoutsem);
+    void AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*& outputwavptr, unsigned int chunksize);
     private:
     stChannel _channel[0x10];
     int _mode;
