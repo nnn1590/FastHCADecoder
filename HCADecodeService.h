@@ -34,7 +34,7 @@ private:
     std::deque<unsigned int> blocks;
     int* workingblocks;
     Semaphore* workersem;
-    Semaphore mainsem, datasem;
+    Semaphore mainsem, datasem, wavoutsem;
     std::mutex filelistmtx, workingmtx;
     clHCA::stChannel* channels;
     bool shutdown;

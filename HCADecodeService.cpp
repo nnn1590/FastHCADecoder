@@ -5,6 +5,7 @@
 HCADecodeService::HCADecodeService()
     : numthreads{ std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1 },
       mainsem{ this->numthreads },
+      wavoutsem{ this->numthreads },
       workingblocks{ new int[this->numthreads] },
       worker_threads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
@@ -26,6 +27,7 @@ HCADecodeService::HCADecodeService()
 HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksize)
     : numthreads{ numthreads ? numthreads : (std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1) },
       mainsem{ this->numthreads },
+      wavoutsem{ this->numthreads },
       workingblocks{ new int[this->numthreads] },
       worker_threads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
@@ -60,12 +62,6 @@ void HCADecodeService::cancel_decode(void* ptr)
     {
         return;
     }
-	if (workingrequest == ptr)
-	{
-		workingrequest = nullptr;
-		std::unique_lock<std::mutex> waitlock(workingmtx);
-	}
-	else
     {
         std::unique_lock<std::mutex> filelistlock(filelistmtx);
 
@@ -76,33 +72,40 @@ void HCADecodeService::cancel_decode(void* ptr)
             datasem.wait();
         }
     }
+    if (workingrequest == ptr)
+    {
+        workingrequest = nullptr;
+        wait_on_all_threads(wavoutsem);
+    }
 }
 
 void HCADecodeService::wait_on_request(void* ptr)
 {
-	if (workingrequest == ptr)
-	{
-		std::unique_lock<std::mutex> waitlock(workingmtx);
-	}
-	else
-	{
-		while (true)
-		{
-			filelistmtx.lock();
-			auto it = filelist.find(ptr);
-			if (it != filelist.end() && it->first == ptr)
-			{
-				filelistmtx.unlock();
-				workingmtx.lock();
-				workingmtx.unlock();
-			}
-			else
-			{
-				filelistmtx.unlock();
-				break;
-			}
-		}
-	}
+    if (ptr == nullptr)
+    {
+        return;
+    }
+    while (true)
+    {
+        filelistmtx.lock();
+        auto it = filelist.find(ptr);
+        if (it != filelist.end() && it->first == ptr)
+        {
+            filelistmtx.unlock();
+            workingmtx.lock();
+            workingmtx.unlock();
+        }
+        else
+        {
+            filelistmtx.unlock();
+            break;
+        }
+    }
+    if(workingrequest == ptr)
+    {
+        workingmtx.lock();
+        workingmtx.unlock();
+    }
 }
 
 void HCADecodeService::wait_for_finish()
@@ -197,7 +200,9 @@ void HCADecodeService::Decode_Thread(int id)
     workersem[id].wait();
     while (workingblocks[id] != -1)
     {
+		wavoutsem.wait();
         workingfile.AsyncDecode(channels + (id * numchannels), workingblocks[id], workingrequest, chunksize);
+		wavoutsem.notify();
         workingblocks[id] = -1;
         mainsem.notify();
         workersem[id].wait();
