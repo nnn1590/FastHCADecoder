@@ -26,17 +26,18 @@ private:
     void join_workers();
 
     clHCA workingfile;
-    unsigned int numthreads, numchannels, chunksize, startingblock;
+    unsigned int numthreads, numchannels, chunksize, startingblock, requestnum;
     void* workingrequest;
     std::thread dispatchthread;
     std::thread* worker_threads;
-    std::map<void*, std::pair<clHCA, unsigned int>> filelist;
+    std::map<unsigned int, std::pair<clHCA, unsigned int>> filelist;
+	std::map<void*, int> requesttoorder;
     std::deque<unsigned int> blocks;
     int* workingblocks;
     Semaphore* workersem;
     Semaphore mainsem, datasem, wavoutsem;
     std::mutex filelistmtx, workingmtx;
     clHCA::stChannel* channels;
-    bool shutdown;
+    bool shutdown, stopcurrent;
 };
 

@@ -13,8 +13,10 @@ HCADecodeService::HCADecodeService()
       chunksize{ 16 },
       datasem{ 0 },
       numchannels{ 0 },
+	  requestnum{ 0 },
       workingrequest{ nullptr },
-      shutdown{ false }
+      shutdown{ false },
+	  stopcurrent{ false }
 {
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
@@ -35,8 +37,10 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       chunksize{ chunksize ? chunksize : 16 },
       datasem{ 0 },
       numchannels{ 0 },
+	  requestnum{ 0 },
       workingrequest{ nullptr },
-      shutdown{ false }
+      shutdown{ false },
+	  stopcurrent{ false }
 {
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
@@ -62,20 +66,23 @@ void HCADecodeService::cancel_decode(void* ptr)
     {
         return;
     }
+	if (workingrequest == ptr)
+	{
+		stopcurrent = true;
+		wait_on_all_threads(wavoutsem);
+	}
+	else
     {
         std::unique_lock<std::mutex> filelistlock(filelistmtx);
 
-        auto it = filelist.find(ptr);
-        if (it != filelist.end() && it->first == ptr)
+        auto it = requesttoorder.find(ptr);
+        if (it != requesttoorder.end())
         {
-            filelist.erase(it);
+			auto it2 = filelist.find(requesttoorder[ptr]);
+			requesttoorder.erase(it);
+			filelist.erase(it2);
             datasem.wait();
         }
-    }
-    if (workingrequest == ptr)
-    {
-        workingrequest = nullptr;
-        wait_on_all_threads(wavoutsem);
     }
 }
 
@@ -85,27 +92,30 @@ void HCADecodeService::wait_on_request(void* ptr)
     {
         return;
     }
-    while (true)
-    {
-        filelistmtx.lock();
-        auto it = filelist.find(ptr);
-        if (it != filelist.end() && it->first == ptr)
-        {
-            filelistmtx.unlock();
-            workingmtx.lock();
-            workingmtx.unlock();
-        }
-        else
-        {
-            filelistmtx.unlock();
-            break;
-        }
-    }
-    if(workingrequest == ptr)
-    {
-        workingmtx.lock();
-        workingmtx.unlock();
-    }
+	if (workingrequest == ptr)
+	{
+		workingmtx.lock();
+		workingmtx.unlock();
+	}
+	else
+	{
+		while (true)
+		{
+			filelistmtx.lock();
+			auto it = requesttoorder.find(ptr);
+			if (it != requesttoorder.end())
+			{
+				filelistmtx.unlock();
+				workingmtx.lock();
+				workingmtx.unlock();
+			}
+			else
+			{
+				filelistmtx.unlock();
+				break;
+			}
+		}
+	}
 }
 
 void HCADecodeService::wait_for_finish()
@@ -135,8 +145,10 @@ std::pair<void*, size_t> HCADecodeService::decode(const char* hcafilename, unsig
             decodefromblock = 0;
         }
         filelistmtx.lock();
-        filelist[wavptr].first = std::move(hca);
-        filelist[wavptr].second = decodefromblock;
+		requesttoorder[wavptr] = requestnum;
+        filelist[requestnum].first = std::move(hca);
+        filelist[requestnum].second = decodefromblock;
+		++requestnum;
         filelistmtx.unlock();
         datasem.notify();
     }
@@ -201,7 +213,7 @@ void HCADecodeService::Decode_Thread(int id)
     while (workingblocks[id] != -1)
     {
 		wavoutsem.wait();
-        workingfile.AsyncDecode(channels + (id * numchannels), workingblocks[id], workingrequest, chunksize);
+        workingfile.AsyncDecode(channels + (id * numchannels), workingblocks[id], workingrequest, chunksize, stopcurrent);
 		wavoutsem.notify();
         workingblocks[id] = -1;
         mainsem.notify();
@@ -211,11 +223,15 @@ void HCADecodeService::Decode_Thread(int id)
 
 void HCADecodeService::load_next_request()
 {
-    auto it = filelist.begin();
-    workingrequest = it->first;
-    workingfile = std::move(it->second.first);
-    startingblock = it->second.second;
-    filelist.erase(it);
+	auto it = requesttoorder.begin();
+	workingrequest = it->first;
+	unsigned int req = it->second;
+	requesttoorder.erase(it);
+    auto it2 = filelist.find(req);
+    workingfile = std::move(it2->second.first);
+    startingblock = it2->second.second;
+    filelist.erase(it2);
+	stopcurrent = false;
 }
 
 void HCADecodeService::populate_block_list()

@@ -663,9 +663,9 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
     return true;
 }
 
-void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*& outputwavptr, unsigned int chunksize)
+void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* outputwavptr, unsigned int chunksize, bool&stop)
 {
-    if (outputwavptr == nullptr) return;
+    if (stop) return;
     int seekhead = 0;
     char* outwavptr = (char*)outputwavptr + ((_mode >> 3) * blocknum * _channelCount << 10) + _wavheadersize;
     unsigned int loopsize = (((_loopEnd - _loopStart - 1) << 10) + 1024) * (_mode >> 3) * _channelCount;
@@ -682,12 +682,12 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*&
                 for (unsigned int j = 0; j < _channelCount; ++j) channelsOffset[j].Decode2(&d);
                 for (unsigned int j = 0; j < _channelCount; ++j) channelsOffset[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
                 for (unsigned int j = 0; j < _channelCount - 1; ++j) channelsOffset[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
-				if (!outputwavptr) return;
+				if (stop) return;
                 for (unsigned int j = 0; j < _channelCount; ++j) channelsOffset[j].Decode5(i);
                 if (x >= 0)
                 {
                     for (int j = 0; j < 0x80; ++j) {
-						if (!outputwavptr) return;
+						if (stop) return;
                         for (unsigned int k = 0; k < _channelCount; ++k) {
                             float f = channelsOffset[k].wave[i][j] * _volume;
                             if (f > 1) { f = 1; }

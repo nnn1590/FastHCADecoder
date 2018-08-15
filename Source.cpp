@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <deque>
 #include "clHCA.h"
 #include "HCADecodeService.h"
 
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
     }
 
     HCADecodeService dec{}; // Start decode service
+	std::deque<std::pair<std::string, std::pair<void*, size_t>>> fileslist;
 
     //if(decodeFlg){
 
@@ -94,30 +96,35 @@ int main(int argc, char *argv[]) {
         else {
             printf("%s をデコード中...\n", argv[i]);
             auto wavout = dec.decode(argv[i], 0, ciphKey1, ciphKey2, volume, mode, loop);
-            if (wavout.first == nullptr)
+            if (!wavout.first)
             {
                 printf("Error: デコードに失敗しました。\n");
             }
-            else
-            {
-                FILE* outfile;
-                if (fopen_s(&outfile, filenameOut, "wb"))
-                {
-                    printf("Error: WAVEファイルの作成に失敗しました。\n");
-                    dec.cancel_decode(wavout.first);
-                    delete[] wavout.first;
-                }
-                else
-                {
-                    dec.wait_on_request(wavout.first);
-                    fwrite(wavout.first, sizeof(unsigned char), wavout.second, outfile);
-                    delete[] wavout.first;
-                    fclose(outfile);
-                }
-            }
+			else
+			{
+				fileslist.push_back(std::make_pair(std::string(filenameOut), wavout));
+			}
         }
-
     }
+
+	for (auto wavfile : fileslist)
+	{
+		FILE* outfile;
+		printf("%s を書き込み中...\n", wavfile.first.c_str());
+		if (fopen_s(&outfile, wavfile.first.c_str(), "wb"))
+		{
+			printf("Error: WAVEファイルの作成に失敗しました。\n");
+			dec.cancel_decode(wavfile.second.first);
+			delete[] wavfile.second.first;
+		}
+		else
+		{
+			dec.wait_on_request(wavfile.second.first);
+			fwrite(wavfile.second.first, 1, wavfile.second.second, outfile);
+			delete[] wavfile.second.first;
+			fclose(outfile);
+		}
+	}
 
     //}
 
