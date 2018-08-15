@@ -32,6 +32,7 @@ private:
     std::thread* worker_threads;
     std::map<unsigned int, std::pair<clHCA, unsigned int>> filelist;
 	std::map<void*, int> requesttoorder;
+	std::map<int, void*> ordertorequest;
     std::deque<unsigned int> blocks;
     int* workingblocks;
     Semaphore* workersem;

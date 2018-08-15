@@ -78,9 +78,11 @@ void HCADecodeService::cancel_decode(void* ptr)
         auto it = requesttoorder.find(ptr);
         if (it != requesttoorder.end())
         {
-			auto it2 = filelist.find(requesttoorder[ptr]);
 			requesttoorder.erase(it);
+			auto it2 = filelist.find(requesttoorder[ptr]);
 			filelist.erase(it2);
+			auto it3 = ordertorequest.find(requesttoorder[ptr]);
+			ordertorequest.erase(it3);
             datasem.wait();
         }
     }
@@ -145,6 +147,7 @@ std::pair<void*, size_t> HCADecodeService::decode(const char* hcafilename, unsig
             decodefromblock = 0;
         }
         filelistmtx.lock();
+		ordertorequest[requestnum] = wavptr;
 		requesttoorder[wavptr] = requestnum;
         filelist[requestnum].first = std::move(hca);
         filelist[requestnum].second = decodefromblock;
@@ -223,14 +226,16 @@ void HCADecodeService::Decode_Thread(int id)
 
 void HCADecodeService::load_next_request()
 {
-	auto it = requesttoorder.begin();
-	workingrequest = it->first;
-	unsigned int req = it->second;
-	requesttoorder.erase(it);
+	auto it = ordertorequest.begin();
+	workingrequest = it->second;
+	unsigned int req = it->first;
+	ordertorequest.erase(it);
     auto it2 = filelist.find(req);
     workingfile = std::move(it2->second.first);
     startingblock = it2->second.second;
     filelist.erase(it2);
+	auto it3 = requesttoorder.find(workingrequest);
+	requesttoorder.erase(it3);
 	stopcurrent = false;
 }
 
