@@ -635,21 +635,21 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
     wavptr = new char[sz];
     memset(wavptr, 0, sz);
     int seekhead = 0;
-    memmove((char*)wavptr + seekhead, &wavRiff, sizeof(wavRiff));
+    memcpy((char*)wavptr + seekhead, &wavRiff, sizeof(wavRiff));
     seekhead += sizeof(wavRiff);
     if (_loopFlg && !loop)
     {
-        memmove((char*)wavptr + seekhead, &wavSmpl, sizeof(wavSmpl));
+		memcpy((char*)wavptr + seekhead, &wavSmpl, sizeof(wavSmpl));
         seekhead += sizeof(wavSmpl);
     }
     if (_comm_comment) {
         int address = seekhead;
-        memmove((char*)wavptr + seekhead, &wavNote, sizeof(wavNote));
+		memcpy((char*)wavptr + seekhead, &wavNote, sizeof(wavNote));
         seekhead += sizeof(wavNote);
         strcpy((char*)wavptr + seekhead, _comm_comment);
         seekhead = address + 8 + wavNote.noteSize;
     }
-    memmove((char*)wavptr + seekhead, &wavData, sizeof(wavData));
+	memcpy((char*)wavptr + seekhead, &wavData, sizeof(wavData));
     seekhead += sizeof(wavRiff);
     delete[] data1;
     hcafileptr = new unsigned char[_blockCount * _blockSize];
@@ -665,17 +665,11 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
 
 void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*& outputwavptr, unsigned int chunksize)
 {
-    if (outputwavptr == nullptr)
-    {
-        return;
-    }
+    if (outputwavptr == nullptr) return;
     int seekhead = 0;
     char* outwavptr = (char*)outputwavptr + ((_mode >> 3) * blocknum * _channelCount << 10) + _wavheadersize;
     unsigned int loopsize = (((_loopEnd - _loopStart - 1) << 10) + 1024) * (_mode >> 3) * _channelCount;
-    if(blocknum == 0)
-    {
-        PrepDecode(channelsOffset, 1);
-    }
+    if(blocknum == 0)  PrepDecode(channelsOffset, 1);
     for (int x = (blocknum == 0) ? 0 : -1; x < (int)chunksize && blocknum + x < _blockCount; ++x)
     {
         //        if(((unsigned char *)data)[_blockSize-2]==0x5E)_asm int 3
@@ -683,24 +677,18 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*&
         int magic = d.GetBit(16);// Fixed as 0xFFFF
         if (magic == 0xFFFF) {
             int a = (d.GetBit(9) << 8) - d.GetBit(7);
-            for (unsigned int i = 0; i < _channelCount; i++)channelsOffset[i].Decode1(&d, _comp_r09, a, _ath.GetTable());
-            for (int i = 0; i < 8; i++) {
-                for (unsigned int j = 0; j < _channelCount; j++)channelsOffset[j].Decode2(&d);
-                for (unsigned int j = 0; j < _channelCount; j++)channelsOffset[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
-                for (unsigned int j = 0; j < _channelCount - 1; j++)channelsOffset[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
-				if (outputwavptr == nullptr)
-				{
-					return;
-				}
-                for (unsigned int j = 0; j < _channelCount; j++)channelsOffset[j].Decode5(i);
+            for (unsigned int i = 0; i < _channelCount; ++i) channelsOffset[i].Decode1(&d, _comp_r09, a, _ath.GetTable());
+            for (int i = 0; i < 8; ++i) {
+                for (unsigned int j = 0; j < _channelCount; ++j) channelsOffset[j].Decode2(&d);
+                for (unsigned int j = 0; j < _channelCount; ++j) channelsOffset[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
+                for (unsigned int j = 0; j < _channelCount - 1; ++j) channelsOffset[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
+				if (!outputwavptr) return;
+                for (unsigned int j = 0; j < _channelCount; ++j) channelsOffset[j].Decode5(i);
                 if (x >= 0)
                 {
-                    for (int j = 0; j < 0x80; j++) {
-						if (outputwavptr == nullptr)
-						{
-							return;
-						}
-                        for (unsigned int k = 0; k < _channelCount; k++) {
+                    for (int j = 0; j < 0x80; ++j) {
+						if (!outputwavptr) return;
+                        for (unsigned int k = 0; k < _channelCount; ++k) {
                             float f = channelsOffset[k].wave[i][j] * _volume;
                             if (f > 1) { f = 1; }
                             else if (f < -1) { f = -1; }
@@ -731,27 +719,27 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void*&
 }
 
 void clHCA::DecodeToMemory_DecodeModeFloat(float f, void* ptr, int& seekhead) {
-    memmove((char*)ptr + seekhead, &f, sizeof(float));
+    memcpy((char*)ptr + seekhead, &f, sizeof(float));
     seekhead += sizeof(float);
 }
 void clHCA::DecodeToMemory_DecodeMode8bit(float f, void* ptr, int& seekhead) {
     int v = (int)(f * 0x7F + 0x80);
-    memmove((char*)ptr + seekhead, &v, 1);
+	memcpy((char*)ptr + seekhead, &v, 1);
     seekhead += 1;
 }
 void clHCA::DecodeToMemory_DecodeMode16bit(float f, void* ptr, int& seekhead) {
     int v = (int)(f * 0x7FFF);
-    memmove((char*)ptr + seekhead, &v, 2);
+	memcpy((char*)ptr + seekhead, &v, 2);
     seekhead += 2;
 }
 void clHCA::DecodeToMemory_DecodeMode24bit(float f, void* ptr, int& seekhead) {
     int v = (int)(f * 0x7FFFFF);
-    memmove((char*)ptr + seekhead, &v, 3);
+	memcpy((char*)ptr + seekhead, &v, 3);
     seekhead += 3;
 }
 void clHCA::DecodeToMemory_DecodeMode32bit(float f, void* ptr, int& seekhead) {
     int v = (int)((double)f * 0x7FFFFFFF);
-    memmove((char*)ptr + seekhead, &v, 4);
+	memcpy((char*)ptr + seekhead, &v, 4);
     seekhead += 4;
 }
 
@@ -1142,12 +1130,12 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
         int magic = d.GetBit(16);//0xFFFF固定
         if (magic == 0xFFFF) {
             int a = (d.GetBit(9) << 8) - d.GetBit(7);
-            for (unsigned int i = 0; i<_channelCount; i++)_channel[i].Decode1(&d, _comp_r09, a, _ath.GetTable());
+            for (unsigned int i = 0; i<_channelCount; ++i)_channel[i].Decode1(&d, _comp_r09, a, _ath.GetTable());
             for (int i = 0; i<8; i++) {
-                for (unsigned int j = 0; j<_channelCount; j++)_channel[j].Decode2(&d);
-                for (unsigned int j = 0; j<_channelCount; j++)_channel[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
-                for (unsigned int j = 0; j<_channelCount - 1; j++)_channel[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
-                for (unsigned int j = 0; j<_channelCount; j++)_channel[j].Decode5(i);
+                for (unsigned int j = 0; j<_channelCount; ++j)_channel[j].Decode2(&d);
+                for (unsigned int j = 0; j<_channelCount; ++j)_channel[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
+                for (unsigned int j = 0; j<_channelCount - 1; ++j)_channel[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
+                for (unsigned int j = 0; j<_channelCount; ++j)_channel[j].Decode5(i);
             }
         }
     }
@@ -1164,7 +1152,7 @@ bool clHCA::PrepDecode(stChannel* channels, unsigned int numthreads)
     unsigned int b = _channelCount / _comp_r03;
     if (_comp_r07&&b>1) {
         char *c = r;
-        for (unsigned int i = 0; i<_comp_r03; i++, c += b) {
+        for (unsigned int i = 0; i<_comp_r03; ++i, c += b) {
             switch (b) {
             case 2:c[0] = 1; c[1] = 2; break;
             case 3:c[0] = 1; c[1] = 2; break;
@@ -1176,7 +1164,7 @@ bool clHCA::PrepDecode(stChannel* channels, unsigned int numthreads)
             }
         }
     }
-    for (unsigned int i = 0; i < _channelCount * numthreads; i++)
+    for (unsigned int i = 0; i < _channelCount * numthreads; ++i)
     {
         channels[i].type = r[i % _channelCount];
         channels[i].value3 = &channels[i].value[_comp_r06 + _comp_r07];
@@ -1228,12 +1216,12 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
     static float *scaleFloat = (float *)scaleInt;
     int v = data->GetBit(3);
     if (v >= 6) {
-        for (unsigned int i = 0; i<count; i++)value[i] = data->GetBit(6);
+        for (unsigned int i = 0; i<count; ++i)value[i] = data->GetBit(6);
     }
     else if (v) {
         int v1 = data->GetBit(6), v2 = (1 << v) - 1, v3 = v2 >> 1, v4;
         value[0] = v1;
-        for (unsigned int i = 1; i<count; i++) {
+        for (unsigned int i = 1; i<count; ++i) {
             v4 = data->GetBit(v);
             if (v4 != v2) { v1 += v4 - v3; }
             else { v1 = data->GetBit(6); }
@@ -1245,12 +1233,12 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
     }
     if (type == 2) {
         v = data->CheckBit(4); value2[0] = v;
-        if (v<15)for (int i = 0; i<8; i++)value2[i] = data->GetBit(4);
+        if (v<15)for (int i = 0; i<8; ++i)value2[i] = data->GetBit(4);
     }
     else {
-        for (unsigned int i = 0; i<a; i++)value3[i] = data->GetBit(6);
+        for (unsigned int i = 0; i<a; ++i)value3[i] = data->GetBit(6);
     }
-    for (unsigned int i = 0; i<count; i++) {
+    for (unsigned int i = 0; i<count; ++i) {
         v = value[i];
         if (v) {
             v = ath[i] + ((b + i) >> 8) - ((v * 5) / 2) + 1;
@@ -1261,7 +1249,7 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
         scale[i] = v;
     }
     memset(&scale[count], 0, 0x80 - count);
-    for (unsigned int i = 0; i<count; i++)base[i] = valueFloat[value[i]] * scaleFloat[scale[i]];
+    for (unsigned int i = 0; i<count; ++i) base[i] = valueFloat[value[i]] * scaleFloat[scale[i]];
 }
 
 //--------------------------------------------------
@@ -1292,7 +1280,7 @@ void clHCA::stChannel::Decode2(clData *data) {
         +0,+0,+1,+1,-1,-1,+2,-2,+3,-3,+4,-4,+5,-5,+6,-6,
         +0,+0,+1,-1,+2,-2,+3,-3,+4,-4,+5,-5,+6,-6,+7,-7,
     };
-    for (unsigned int i = 0; i<count; i++) {
+    for (unsigned int i = 0; i<count; ++i) {
         float f;
         int s = scale[i];
         int bitSize = list1[s];
