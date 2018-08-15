@@ -13,7 +13,6 @@ HCADecodeService::HCADecodeService()
       chunksize{ 16 },
       datasem{ 0 },
       numchannels{ 0 },
-	  requestnum{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
 	  stopcurrent{ false }
@@ -37,7 +36,6 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       chunksize{ chunksize ? chunksize : 16 },
       datasem{ 0 },
       numchannels{ 0 },
-	  requestnum{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
 	  stopcurrent{ false }
@@ -75,14 +73,10 @@ void HCADecodeService::cancel_decode(void* ptr)
     {
         std::unique_lock<std::mutex> filelistlock(filelistmtx);
 
-        auto it = requesttoorder.find(ptr);
-        if (it != requesttoorder.end())
+        auto it = filelist.find(ptr);
+        if (it != filelist.end())
         {
-			requesttoorder.erase(it);
-			auto it2 = filelist.find(requesttoorder[ptr]);
-			filelist.erase(it2);
-			auto it3 = ordertorequest.find(requesttoorder[ptr]);
-			ordertorequest.erase(it3);
+			filelist.erase(it);
             datasem.wait();
         }
     }
@@ -104,8 +98,8 @@ void HCADecodeService::wait_on_request(void* ptr)
 		while (true)
 		{
 			filelistmtx.lock();
-			auto it = requesttoorder.find(ptr);
-			if (it != requesttoorder.end())
+			auto it = filelist.find(ptr);
+			if (it != filelist.end())
 			{
 				filelistmtx.unlock();
 				workingmtx.lock();
@@ -147,11 +141,8 @@ std::pair<void*, size_t> HCADecodeService::decode(const char* hcafilename, unsig
             decodefromblock = 0;
         }
         filelistmtx.lock();
-		ordertorequest[requestnum] = wavptr;
-		requesttoorder[wavptr] = requestnum;
-        filelist[requestnum].first = std::move(hca);
-        filelist[requestnum].second = decodefromblock;
-		++requestnum;
+        filelist[wavptr].first = std::move(hca);
+        filelist[wavptr].second = decodefromblock;
         filelistmtx.unlock();
         datasem.notify();
     }
@@ -226,16 +217,11 @@ void HCADecodeService::Decode_Thread(int id)
 
 void HCADecodeService::load_next_request()
 {
-	auto it = ordertorequest.begin();
-	workingrequest = it->second;
-	unsigned int req = it->first;
-	ordertorequest.erase(it);
-    auto it2 = filelist.find(req);
-    workingfile = std::move(it2->second.first);
-    startingblock = it2->second.second;
-    filelist.erase(it2);
-	auto it3 = requesttoorder.find(workingrequest);
-	requesttoorder.erase(it3);
+	auto it = filelist.begin();
+	workingrequest = it->first;
+    workingfile = std::move(it->second.first);
+    startingblock = it->second.second;
+	filelist.erase(it);
 	stopcurrent = false;
 }
 

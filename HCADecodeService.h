@@ -26,13 +26,11 @@ private:
     void join_workers();
 
     clHCA workingfile;
-    unsigned int numthreads, numchannels, chunksize, startingblock, requestnum;
+    unsigned int numthreads, numchannels, chunksize, startingblock;
     void* workingrequest;
     std::thread dispatchthread;
     std::thread* worker_threads;
-    std::map<unsigned int, std::pair<clHCA, unsigned int>> filelist;
-	std::map<void*, int> requesttoorder;
-	std::map<int, void*> ordertorequest;
+    std::map<void*, std::pair<clHCA, unsigned int>> filelist;
     std::deque<unsigned int> blocks;
     int* workingblocks;
     Semaphore* workersem;
