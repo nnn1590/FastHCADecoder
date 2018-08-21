@@ -7,6 +7,8 @@
 #ifndef CLHCA_H
 #define CLHCA_H
 
+#include <stddef.h>
+
 // Copyright (c) 2017 にゃが
 
 //--------------------------------------------------

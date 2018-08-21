@@ -7,7 +7,7 @@ HCADecodeService::HCADecodeService()
       mainsem{ this->numthreads },
       wavoutsem{ this->numthreads },
       workingblocks{ new int[this->numthreads] },
-      worker_threads{ new std::thread[this->numthreads] },
+      workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ 16 },
@@ -19,7 +19,7 @@ HCADecodeService::HCADecodeService()
 {
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
-        worker_threads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
+        workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
         workingblocks[i] = -1;
     }
     dispatchthread = std::thread{ &HCADecodeService::Main_Thread, this };
@@ -30,7 +30,7 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       mainsem{ this->numthreads },
       wavoutsem{ this->numthreads },
       workingblocks{ new int[this->numthreads] },
-      worker_threads{ new std::thread[this->numthreads] },
+      workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ chunksize ? chunksize : 16 },
@@ -42,7 +42,7 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
 {
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
-        worker_threads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
+        workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
         workingblocks[i] = -1;
     }
     dispatchthread = std::thread{ &HCADecodeService::Main_Thread, this };
@@ -55,12 +55,12 @@ HCADecodeService::~HCADecodeService()
     dispatchthread.join();
     delete[] channels;
     delete[] workersem;
-    delete[] worker_threads;
+    delete[] workerthreads;
 }
 
 void HCADecodeService::cancel_decode(void* ptr)
 {
-    if (ptr == nullptr)
+    if (!ptr)
     {
         return;
     }
@@ -84,7 +84,7 @@ void HCADecodeService::cancel_decode(void* ptr)
 
 void HCADecodeService::wait_on_request(void* ptr)
 {
-    if (ptr == nullptr)
+    if (!ptr)
     {
         return;
     }
@@ -133,7 +133,7 @@ std::pair<void*, size_t> HCADecodeService::decode(const char* hcafilename, unsig
     void* wavptr = nullptr;
     size_t sz = 0;
     hca.Analyze(wavptr, sz, hcafilename, volume, mode, loop);
-    if (wavptr != nullptr)
+    if (wavptr)
     {
         unsigned int decodefromblock = decodefromsample / (hca.get_channelCount() << 10);
         if (decodefromblock > hca.get_blockCount())
@@ -248,6 +248,6 @@ void HCADecodeService::join_workers()
     for (unsigned int i = 0; i < numthreads; ++i)
     {
         workersem[i].notify();
-        worker_threads[i].join();
+        workerthreads[i].join();
     }
 }

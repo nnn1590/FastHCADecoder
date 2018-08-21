@@ -119,8 +119,8 @@ bool clHCA::PrintInfo(const char *filenameHCA) {
     if (!(filenameHCA))return false;
 
     // HCAファイルを開く
-    FILE *fp;
-    if (fopen_s(&fp, filenameHCA, "rb")) {
+    FILE *fp = fopen(filenameHCA, "rb");
+    if (!fp) {
         printf("Error: ファイルが開けませんでした。\n");
         return false;
     }
@@ -367,8 +367,8 @@ bool clHCA::Decrypt(const char *filenameHCA) {
     if (!(filenameHCA))return false;
 
     // HCAファイルを開く
-    FILE *fp;
-    if (fopen_s(&fp, filenameHCA, "r+b"))return false;
+    FILE *fp = fopen(filenameHCA, "r+b");
+    if (!fp)return false;
 
     // ヘッダチェック
     stHeader header;
@@ -519,8 +519,8 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
     if (!(filenameHCA))return false;
 
     // HCAファイルを開く
-    FILE *fp;
-    if (fopen_s(&fp, filenameHCA, "rb"))return false;
+    FILE *fp = fopen(filenameHCA, "rb");
+    if (!fp)return false;
 
     // チェック
     if (!(fp && (mode == 0 || mode == 8 || mode == 16 || mode == 24 || mode == 32) && loop >= 0))
@@ -669,7 +669,7 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* 
     int seekhead = 0;
     char* outwavptr = (char*)outputwavptr + ((_mode >> 3) * blocknum * _channelCount << 10) + _wavheadersize;
     unsigned int loopsize = (((_loopEnd - _loopStart - 1) << 10) + 1024) * (_mode >> 3) * _channelCount;
-    if(blocknum == 0)  PrepDecode(channelsOffset, 1);
+    if (blocknum == 0)  PrepDecode(channelsOffset, 1);
     for (int x = (blocknum == 0) ? 0 : -1; x < (int)chunksize && blocknum + x < _blockCount; ++x)
     {
         //        if(((unsigned char *)data)[_blockSize-2]==0x5E)_asm int 3
@@ -698,7 +698,7 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* 
                             }
                             else if (blocknum + x < _loopEnd)
                             {
-                                int s = 0;
+                                int s;
                                 for (int l = 0; l <= _loopNum; ++l)
                                 {
                                     s = seekhead;
