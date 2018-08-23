@@ -13,8 +13,10 @@ public:
 
     void notify(int n = 1)
     {
-        std::unique_lock<std::mutex> lock(mtx);
-        count += n;
+		{
+			std::unique_lock<std::mutex> lock(mtx);
+			count += n;
+		}
 		for(int i = 0; i < n; ++i) { cv.notify_one(); }
     }
 

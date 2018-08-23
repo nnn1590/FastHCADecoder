@@ -8,6 +8,7 @@
 #include <memory.h>
 #include <string.h>
 #include <utility>
+#include <algorithm>
 
 //--------------------------------------------------
 // インライン関数
@@ -689,9 +690,7 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* 
                     for (int j = 0; j < 0x80; ++j) {
 						if (stop) return;
                         for (unsigned int k = 0; k < _channelCount; ++k) {
-                            float f = channelsOffset[k].wave[i][j] * _volume;
-                            if (f > 1) { f = 1; }
-                            else if (f < -1) { f = -1; }
+                            float f = std::clamp(channelsOffset[k].wave[i][j] * _volume, -1.0f, 1.0f);
                             if (blocknum + x < _loopStart)
                             {
                                 ((void(*)(float, void *, int&))_modeFunction)(f, outwavptr, seekhead);
@@ -1328,9 +1327,9 @@ void clHCA::stChannel::Decode3(unsigned int a, unsigned int b, unsigned int c, u
             }
         };
         static float *listFloat = (float *)listInt[1];
-        for (unsigned int i = 0; i<a; i++) {
-            for (unsigned int j = 0, k = c, l = c - 1; j<b&&k<d; j++, l--) {
-                block[k++] = listFloat[value3[i] - value[l]] * block[l];
+        for (unsigned int i = 0; i<a; ++i) {
+            for (unsigned int j = 0, k = c, l = c - 1; j<b && k<d; ++j, --l, ++k) {
+                block[k] = listFloat[value3[i] - value[l]] * block[l];
             }
         }
         block[0x80 - 1] = 0;
@@ -1559,7 +1558,7 @@ void clHCA::stChannel::Decode5(int index) {
         float *w = s; s = d; d = w;
     }
     memcpy(wav2, s, 0x80 * sizeof(float));
-    //for (int i = 0; i<0x80; i++)*(d++) = *(s++);
+
     s = (float *)list3Int; d = wave[index];
     s1 = &wav2[0x40]; s2 = wav3;
     for (int i = 0; i<0x40; ++i)*(d++) = *(s1++)**(s++) + *(s2++);

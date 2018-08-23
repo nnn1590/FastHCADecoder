@@ -8,7 +8,9 @@
 #include "clHCA.h"
 #include "HCADecodeService.h"
 
+#ifndef MAX_PATH
 #define MAX_PATH 260
+#endif
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
@@ -74,7 +76,7 @@ int main(int argc, char *argv[]) {
             char *d1 = strrchr(path, '\\');
             char *d2 = strrchr(path, '/');
             char *e = strrchr(path, '.');
-            if (e&&d1<e&&d2<e)*e = '\0';
+            if (e && d1 < e && d2 < e)*e = '\0';
             strcat(path, ".wav");
             filenameOut = path;
         }
