@@ -1523,8 +1523,8 @@ void clHCA::stChannel::Decode5(int index) {
         float *d2 = &d[count2] - 1;
         for (int j = 0; j<count1; ++j) {
             for (int k = 0; k<count2; ++k) {
-                float& a = *(++s);
-                float& b = *(++s);
+                float a = *(++s);
+                float b = *(++s);
                 *(++d1) = b + a;
                 *(++d2) = a - b;
             }
@@ -1543,10 +1543,10 @@ void clHCA::stChannel::Decode5(int index) {
         float *d2 = &d1[count2 * 2 - 1];
         for (int j = 0; j<count1; ++j) {
             for (int k = 0; k<count2; ++k) {
-                float& a = *(++s1);
-                float& b = *(++s2);
-                float& c = *(++list1Float);
-                float& d = *(++list2Float);
+                float a = *(++s1);
+                float b = *(++s2);
+                float c = *(++list1Float);
+                float d = *(++list2Float);
                 *(d1++) = a * c - b * d;
                 *(d2--) = a * d + b * c;
             }
