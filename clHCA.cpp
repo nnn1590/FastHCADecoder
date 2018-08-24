@@ -632,7 +632,7 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
     }
 
     sz = wavRiff.riffSize + 8;
-    wavptr = new char[sz];
+    wavptr = malloc(sz);
     memset(wavptr, 0, sz);
     int seekhead = 0;
     memcpy((char*)wavptr + seekhead, &wavRiff, sizeof(wavRiff));
