@@ -121,13 +121,13 @@ int main(int argc, char *argv[]) {
 		{
 			printf("Error: WAVEファイルの作成に失敗しました。\n");
 			dec.cancel_decode(fileslist[i].second.first);
-			free(fileslist[i].second.first);
+			operator delete(fileslist[i].second.first);
 		}
 		else
 		{
 			dec.wait_on_request(fileslist[i].second.first);
 			fwrite(fileslist[i].second.first, 1, fileslist[i].second.second, outfile);
-			free(fileslist[i].second.first);
+			operator delete(fileslist[i].second.first);
 			fclose(outfile);
 		}
 	}

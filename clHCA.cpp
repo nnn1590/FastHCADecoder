@@ -3,11 +3,11 @@
 //--------------------------------------------------
 // インクルード
 //--------------------------------------------------
-#include "clHCA.h"
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
 #include <utility>
+#include "clHCA.h"
 
 //--------------------------------------------------
 // インライン関数
@@ -632,7 +632,7 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
     }
 
     sz = wavRiff.riffSize + 8;
-    wavptr = malloc(sz);
+    wavptr = operator new(sz);
     memset(wavptr, 0, sz);
     int seekhead = 0;
     memcpy((char*)wavptr + seekhead, &wavRiff, sizeof(wavRiff));
@@ -1281,21 +1281,19 @@ void clHCA::stChannel::Decode2(clData *data) {
         +0,+0,+1,-1,+2,-2,+3,-3,+4,-4,+5,-5,+6,-6,+7,-7,
     };
     for (unsigned int i = 0; i<count; ++i) {
-        float f;
         int s = scale[i];
         int bitSize = list1[s];
         int v = data->GetBit(bitSize);
         if (s<8) {
             v += s << 4;
             data->AddBit(list2[v] - bitSize);
-            f = list3[v];
+			block[i] = base[i] * list3[v];
         }
         else {
             v = (1 - ((v & 1) << 1))*(v / 2);
             if (!v)data->AddBit(-1);
-            f = (float)v;
+			block[i] = base[i] * v;
         }
-        block[i] = base[i] * f;
     }
     memset(&block[count], 0, sizeof(float)*(0x80 - count));
 }
