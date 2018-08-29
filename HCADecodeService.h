@@ -42,4 +42,4 @@ private:
     bool shutdown, stopcurrent;
 };
 
-#endif HCADECODESERVICE_H
+#endif //HCADECODESERVICE_H
