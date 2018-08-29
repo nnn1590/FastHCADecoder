@@ -670,10 +670,10 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* 
     char* outwavptr = (char*)outputwavptr + ((_mode >> 3) * blocknum * _channelCount << 10) + _wavheadersize;
     unsigned int loopsize = (((_loopEnd - _loopStart - 1) << 10) + 1024) * (_mode >> 3) * _channelCount;
     if (blocknum == 0)  PrepDecode(channelsOffset, 1);
-    for (int x = (blocknum == 0) ? 0 : -1; x < (int)chunksize && blocknum + x < _blockCount; ++x)
+    for (int x = (blocknum == 0) ? 0 : -1, currblock = blocknum + x; x < (int)chunksize && currblock < _blockCount; ++x, ++currblock)
     {
         //        if(((unsigned char *)data)[_blockSize-2]==0x5E)_asm int 3
-        clData d(hcafileptr + ((blocknum + x) * _blockSize), _blockSize);
+        clData d(hcafileptr + (currblock * _blockSize), _blockSize);
         int magic = d.GetBit(16);// Fixed as 0xFFFF
         if (magic == 0xFFFF) {
             int a = (d.GetBit(9) << 8) - d.GetBit(7);
@@ -692,11 +692,11 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* 
 							float f = channelsOffset[k].wave[i][j] * _volume;
 							if (f > 1.0f) f = 1.0f;
 							else if (f < -1.0f) f = -1.0f;
-                            if (blocknum + x < _loopStart)
+                            if (currblock < _loopStart)
                             {
                                 ((void(*)(float, void *, int&))_modeFunction)(f, outwavptr, seekhead);
                             }
-                            else if (blocknum + x < _loopEnd)
+                            else if (currblock < _loopEnd)
                             {
                                 int s;
                                 for (int l = 0; l <= _loopNum; ++l)

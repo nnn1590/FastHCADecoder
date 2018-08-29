@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     }
 
 	HCADecodeService dec{}; // Start decode service
-	std::pair<std::string, std::pair<void*, size_t>>* fileslist = new std::pair<std::string, std::pair<void*, size_t>>[count];
+	auto fileslist = new std::pair<std::string, std::pair<void*, size_t>>[count];
 
     // デコード
     for (unsigned int i = 0; i<count; ++i) {
@@ -121,15 +121,14 @@ int main(int argc, char *argv[]) {
 		{
 			printf("Error: WAVEファイルの作成に失敗しました。\n");
 			dec.cancel_decode(fileslist[i].second.first);
-			operator delete(fileslist[i].second.first);
 		}
 		else
 		{
 			dec.wait_on_request(fileslist[i].second.first);
 			fwrite(fileslist[i].second.first, 1, fileslist[i].second.second, outfile);
-			operator delete(fileslist[i].second.first);
 			fclose(outfile);
 		}
+		operator delete(fileslist[i].second.first);
 	}
 
     //}
