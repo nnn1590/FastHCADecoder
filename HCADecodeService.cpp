@@ -53,12 +53,13 @@ HCADecodeService::~HCADecodeService()
     shutdown = true;
     datasem.notify();
     dispatchthread.join();
+	delete[] workingblocks;
     delete[] channels;
     delete[] workersem;
     delete[] workerthreads;
 }
 
-void HCADecodeService::cancel_decode(void* ptr)
+void HCADecodeService::cancel_decode(void *ptr)
 {
     if (!ptr)
     {
@@ -82,7 +83,7 @@ void HCADecodeService::cancel_decode(void* ptr)
     }
 }
 
-void HCADecodeService::wait_on_request(void* ptr)
+void HCADecodeService::wait_on_request(void *ptr)
 {
     if (!ptr)
     {
@@ -90,8 +91,7 @@ void HCADecodeService::wait_on_request(void* ptr)
     }
 	if (workingrequest == ptr)
 	{
-		workingmtx.lock();
-		workingmtx.unlock();
+		std::lock_guard<std::mutex> lck(workingmtx);
 	}
 	else
 	{
@@ -102,8 +102,7 @@ void HCADecodeService::wait_on_request(void* ptr)
 			if (it != filelist.end())
 			{
 				filelistmtx.unlock();
-				workingmtx.lock();
-				workingmtx.unlock();
+				std::lock_guard<std::mutex> lck(workingmtx);
 			}
 			else
 			{
@@ -127,7 +126,7 @@ void HCADecodeService::wait_for_finish()
     filelistmtx.unlock();
 }
 
-std::pair<void*, size_t> HCADecodeService::decode(const char* hcafilename, unsigned int decodefromsample, unsigned int ciphKey1, unsigned int ciphKey2, float volume, int mode, int loop)
+std::pair<void*, size_t> HCADecodeService::decode(const char *hcafilename, unsigned int decodefromsample, unsigned int ciphKey1, unsigned int ciphKey2, float volume, int mode, int loop)
 {
     clHCA hca(ciphKey1, ciphKey2);
     void* wavptr = nullptr;
@@ -237,7 +236,7 @@ void HCADecodeService::populate_block_list()
     }
 }
 
-void HCADecodeService::wait_on_all_threads(Semaphore& sem)
+void HCADecodeService::wait_on_all_threads(Semaphore &sem)
 {
 	sem.wait(numthreads);
 	sem.notify(numthreads);

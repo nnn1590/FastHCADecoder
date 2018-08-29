@@ -511,7 +511,7 @@ bool clHCA::Decrypt(const char *filenameHCA) {
 //--------------------------------------------------
 // Analyze and store information about HCA
 //-------------------------------------------------
-bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float volume, int mode, int loop)
+bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float volume, int mode, int loop)
 {
     wavptr = nullptr;
     sz = 0;
@@ -663,7 +663,7 @@ bool clHCA::Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float vo
     return true;
 }
 
-void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* outputwavptr, unsigned int chunksize, bool&stop)
+void clHCA::AsyncDecode(stChannel *channelsOffset, unsigned int blocknum, void *outputwavptr, unsigned int chunksize, bool &stop)
 {
     if (stop) return;
     int seekhead = 0;
@@ -718,26 +718,26 @@ void clHCA::AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* 
     }
 }
 
-void clHCA::DecodeToMemory_DecodeModeFloat(float f, void* ptr, int& seekhead) {
+void clHCA::DecodeToMemory_DecodeModeFloat(float f, void *ptr, int &seekhead) {
     memcpy((char*)ptr + seekhead, &f, sizeof(float));
     seekhead += sizeof(float);
 }
-void clHCA::DecodeToMemory_DecodeMode8bit(float f, void* ptr, int& seekhead) {
+void clHCA::DecodeToMemory_DecodeMode8bit(float f, void *ptr, int &seekhead) {
     int v = (int)(f * 0x7F + 0x80);
 	memcpy((char*)ptr + seekhead, &v, 1);
     seekhead += 1;
 }
-void clHCA::DecodeToMemory_DecodeMode16bit(float f, void* ptr, int& seekhead) {
+void clHCA::DecodeToMemory_DecodeMode16bit(float f, void *ptr, int &seekhead) {
     int v = (int)(f * 0x7FFF);
 	memcpy((char*)ptr + seekhead, &v, 2);
     seekhead += 2;
 }
-void clHCA::DecodeToMemory_DecodeMode24bit(float f, void* ptr, int& seekhead) {
+void clHCA::DecodeToMemory_DecodeMode24bit(float f, void *ptr, int &seekhead) {
     int v = (int)(f * 0x7FFFFF);
 	memcpy((char*)ptr + seekhead, &v, 3);
     seekhead += 3;
 }
-void clHCA::DecodeToMemory_DecodeMode32bit(float f, void* ptr, int& seekhead) {
+void clHCA::DecodeToMemory_DecodeMode32bit(float f, void *ptr, int &seekhead) {
     int v = (int)((double)f * 0x7FFFFFFF);
 	memcpy((char*)ptr + seekhead, &v, 4);
     seekhead += 4;

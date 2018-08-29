@@ -193,8 +193,8 @@ private:
         void Decode5(int index);
     };
     bool PrepDecode(stChannel* channels, unsigned int numthreads);
-    bool Analyze(void*& wavptr, size_t& sz, const char* filenameHCA, float volume = 1.0f, int mode = 16, int loop = 0);
-    void AsyncDecode(stChannel* channelsOffset, unsigned int blocknum, void* outputwavptr, unsigned int chunksize, bool& stop);
+    bool Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float volume = 1.0f, int mode = 16, int loop = 0);
+    void AsyncDecode(stChannel *channelsOffset, unsigned int blocknum, void *outputwavptr, unsigned int chunksize, bool &stop);
     private:
     stChannel _channel[0x10];
     int _mode;
@@ -203,11 +203,11 @@ private:
     unsigned int _wavheadersize;
     bool Decode(void *data, unsigned int size, unsigned int address);
     void (*_modeFunction)(float, void*, int&);
-    static void DecodeToMemory_DecodeModeFloat(float f, void* ptr, int& seekhead);
-    static void DecodeToMemory_DecodeMode8bit(float f, void* ptr, int& seekhead);
-    static void DecodeToMemory_DecodeMode16bit(float f, void* ptr, int& seekhead);
-    static void DecodeToMemory_DecodeMode24bit(float f, void* ptr, int& seekhead);
-    static void DecodeToMemory_DecodeMode32bit(float f, void* ptr, int& seekhead);
+    static void DecodeToMemory_DecodeModeFloat(float f, void *ptr, int &seekhead);
+    static void DecodeToMemory_DecodeMode8bit (float f, void *ptr, int &seekhead);
+    static void DecodeToMemory_DecodeMode16bit(float f, void *ptr, int &seekhead);
+    static void DecodeToMemory_DecodeMode24bit(float f, void *ptr, int &seekhead);
+    static void DecodeToMemory_DecodeMode32bit(float f, void *ptr, int &seekhead);
 };
 
 #endif // CLHCA_H

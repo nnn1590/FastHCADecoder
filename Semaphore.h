@@ -4,6 +4,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <algorithm>
 
 class Semaphore
 {
@@ -25,10 +26,7 @@ public:
         std::unique_lock<std::mutex> lock(mtx);
         cv.wait(lock, [this, n] {
             bool wake = count >= n;
-            if(!wake)
-            {
-                cv.notify_one();
-            }
+            if (!wake) cv.notify_one();
             return wake;
         });
         count -= n;
