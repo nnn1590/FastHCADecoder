@@ -17,7 +17,7 @@
 class clHCA {
 public:
     clHCA(unsigned int ciphKey1 = 0xBC731A85, unsigned int ciphKey2 = 0x0002B875);
-    clHCA& operator=(clHCA&& other);
+    clHCA &operator=(clHCA &&other);
     ~clHCA();
 
     // HCAチェック
@@ -184,7 +184,6 @@ private:
         unsigned int count;
         float wav1[0x80];
         float wav2[0x80];
-        float wav3[0x80];
         float wave[8][0x80];
         void Decode1(clData *data, unsigned int a, int b, unsigned char *ath);
         void Decode2(clData *data);
@@ -202,7 +201,7 @@ private:
     unsigned char* hcafileptr;
     unsigned int _wavheadersize;
     bool Decode(void *data, unsigned int size, unsigned int address);
-    void (*_modeFunction)(float, void*, int&);
+    void (*_modeFunction)(float, void *, int &);
     static void DecodeToMemory_DecodeModeFloat(float f, void *ptr, int &seekhead);
     static void DecodeToMemory_DecodeMode8bit (float f, void *ptr, int &seekhead);
     static void DecodeToMemory_DecodeMode16bit(float f, void *ptr, int &seekhead);

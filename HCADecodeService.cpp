@@ -126,16 +126,16 @@ void HCADecodeService::wait_for_finish()
     filelistmtx.unlock();
 }
 
-std::pair<void*, size_t> HCADecodeService::decode(const char *hcafilename, unsigned int decodefromsample, unsigned int ciphKey1, unsigned int ciphKey2, float volume, int mode, int loop)
+std::pair<void *, size_t> HCADecodeService::decode(const char *hcafilename, unsigned int decodefromsample, unsigned int ciphKey1, unsigned int ciphKey2, float volume, int mode, int loop)
 {
     clHCA hca(ciphKey1, ciphKey2);
-    void* wavptr = nullptr;
+    void *wavptr = nullptr;
     size_t sz = 0;
     hca.Analyze(wavptr, sz, hcafilename, volume, mode, loop);
     if (wavptr)
     {
-        unsigned int decodefromblock = decodefromsample / (hca.get_channelCount() << 10);
-        if (decodefromblock > hca.get_blockCount())
+        unsigned int decodefromblock = decodefromsample / hca.get_channelCount() >> 10;
+        if (decodefromblock >= hca.get_blockCount())
         {
             decodefromblock = 0;
         }
@@ -145,7 +145,7 @@ std::pair<void*, size_t> HCADecodeService::decode(const char *hcafilename, unsig
         filelistmtx.unlock();
         datasem.notify();
     }
-    return std::pair<void*, size_t>(wavptr, sz);
+    return std::pair<void *, size_t>(wavptr, sz);
 }
 
 void HCADecodeService::Main_Thread()

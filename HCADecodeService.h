@@ -16,7 +16,7 @@ public:
     HCADecodeService(unsigned int num_threads, unsigned int chunksize = 24);
     ~HCADecodeService();
     void cancel_decode(void *ptr);
-    std::pair<void*, size_t> decode(const char *hcafilename, unsigned int decodefromsample = 0, unsigned int ciphKey1 = 0xBC731A85, unsigned int ciphKey2 = 0x0002B875, float volume = 1.0f, int mode = 16, int loop = 0);
+    std::pair<void *, size_t> decode(const char *hcafilename, unsigned int decodefromsample = 0, unsigned int ciphKey1 = 0xBC731A85, unsigned int ciphKey2 = 0x0002B875, float volume = 1.0f, int mode = 16, int loop = 0);
     void wait_on_request(void *ptr);
     void wait_for_finish();
 private:
@@ -32,7 +32,7 @@ private:
     void *workingrequest;
     std::thread dispatchthread;
     std::thread *workerthreads;
-    std::map<void*, std::pair<clHCA, unsigned int>> filelist;
+    std::map<void *, std::pair<clHCA, unsigned int>> filelist;
     std::deque<unsigned int> blocks;
     int *workingblocks;
     Semaphore *workersem;
