@@ -1504,8 +1504,8 @@ void clHCA::stChannel::Decode5(float* wavebuffer, unsigned int channelCount, flo
 	
 	s = (float *)list3Int;
     s1 = &block[0x40]; s2 = wav2;
-    for (int i = 0; i<0x40; ++i, wavebuffer += channelCount)*(wavebuffer) = clamp(*(s1++)**(s++) + *(s2++) * volume, -1.f, 1.f);
-    for (int i = 0; i<0x40; ++i, wavebuffer += channelCount)*(wavebuffer) = clamp(*(s++)**(--s1) - *(s2++) * volume, -1.f, 1.f);
+    for (int i = 0; i<0x40; ++i, wavebuffer += channelCount)*(wavebuffer) = clamp(volume * (*(s1++)**(s++) + *(s2++)), -1.f, 1.f);
+    for (int i = 0; i<0x40; ++i, wavebuffer += channelCount)*(wavebuffer) = clamp(volume * (*(s++)**(--s1) - *(s2++)), -1.f, 1.f);
 	s1 = &block [0x40 - 1]; s2 = wav2;
     for (int i = 0; i<0x40; ++i)*(s2++) = *(s1--)**(--s);
     for (int i = 0; i<0x40; ++i)*(s2++) = *(--s)**(++s1);
