@@ -21,7 +21,7 @@ public:
     void wait_for_finish();
 private:
     void Main_Thread();
-    void Decode_Thread(int id);
+    void Decode_Thread(unsigned int id);
     void load_next_request();
     void populate_block_list();
     void wait_on_all_threads(Semaphore &sem);
@@ -39,6 +39,7 @@ private:
     Semaphore mainsem, datasem, wavoutsem;
     std::mutex filelistmtx, workingmtx;
     clHCA::stChannel *channels;
+	float *wavebuffer;
     bool shutdown, stopcurrent;
 };
 

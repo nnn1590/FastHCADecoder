@@ -17,7 +17,7 @@
 class clHCA {
 public:
     clHCA(unsigned int ciphKey1 = 0xBC731A85, unsigned int ciphKey2 = 0x0002B875);
-    clHCA &operator=(clHCA &&other);
+    clHCA &operator=(clHCA &&other) noexcept;
     ~clHCA();
 
     // HCAチェック
@@ -184,29 +184,27 @@ private:
         unsigned int count;
         float wav1[0x80];
         float wav2[0x80];
-        float wave[8][0x80];
         void Decode1(clData *data, unsigned int a, int b, unsigned char *ath);
         void Decode2(clData *data);
         void Decode3(unsigned int a, unsigned int b, unsigned int c, unsigned int d);
         void Decode4(int index, unsigned int a, unsigned int b, unsigned int c);
-        void Decode5(int index);
+        void Decode5(float* wavebuffer, unsigned int channelCount, float volume);
     };
     bool PrepDecode(stChannel* channels, unsigned int numthreads);
     bool Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float volume = 1.0f, int mode = 16, int loop = 0);
-    void AsyncDecode(stChannel *channelsOffset, unsigned int blocknum, void *outputwavptr, unsigned int chunksize, bool &stop);
+    void AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blocknum, void *outputwavptr, unsigned int chunksize, bool &stop);
     private:
-    stChannel _channel[0x10];
-    int _mode;
-    int _loopNum;
-    unsigned char* hcafileptr;
+    unsigned int _mode;
+    unsigned int _loopNum;
+    unsigned char *hcafileptr;
     unsigned int _wavheadersize;
     bool Decode(void *data, unsigned int size, unsigned int address);
-    void (*_modeFunction)(float, void *, int &);
-    static void DecodeToMemory_DecodeModeFloat(float f, void *ptr, int &seekhead);
-    static void DecodeToMemory_DecodeMode8bit (float f, void *ptr, int &seekhead);
-    static void DecodeToMemory_DecodeMode16bit(float f, void *ptr, int &seekhead);
-    static void DecodeToMemory_DecodeMode24bit(float f, void *ptr, int &seekhead);
-    static void DecodeToMemory_DecodeMode32bit(float f, void *ptr, int &seekhead);
+    void (*_modeFunction)(float, void *);
+    static void DecodeToMemory_DecodeModeFloat(float f, void *ptr);
+    static void DecodeToMemory_DecodeMode8bit (float f, void *ptr);
+    static void DecodeToMemory_DecodeMode16bit(float f, void *ptr);
+    static void DecodeToMemory_DecodeMode24bit(float f, void *ptr);
+    static void DecodeToMemory_DecodeMode32bit(float f, void *ptr);
 };
 
 #endif // CLHCA_H

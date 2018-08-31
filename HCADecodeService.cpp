@@ -9,6 +9,7 @@ HCADecodeService::HCADecodeService()
       workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
+	  wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ 24 },
       datasem{ 0 },
@@ -32,6 +33,7 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
+	  wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ chunksize ? chunksize : 24 },
       datasem{ 0 },
@@ -54,6 +56,7 @@ HCADecodeService::~HCADecodeService()
     datasem.notify();
     dispatchthread.join();
 	delete[] workingblocks;
+	delete[] wavebuffer;
     delete[] channels;
     delete[] workersem;
     delete[] workerthreads;
@@ -200,13 +203,14 @@ void HCADecodeService::Main_Thread()
     join_workers();
 }
 
-void HCADecodeService::Decode_Thread(int id)
+void HCADecodeService::Decode_Thread(unsigned int id)
 {
     workersem[id].wait();
     while (workingblocks[id] != -1)
     {
 		wavoutsem.wait();
-        workingfile.AsyncDecode(channels + (id * numchannels), workingblocks[id], workingrequest, chunksize, stopcurrent);
+		unsigned int offset = id * numchannels;
+        workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), workingblocks[id], workingrequest, chunksize, stopcurrent);
 		wavoutsem.notify();
         workingblocks[id] = -1;
         mainsem.notify();
