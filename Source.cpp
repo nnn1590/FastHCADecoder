@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     int loop = 0;
     bool info = false;
     bool decrypt = false;
-    for (int i = 1; i<argc; ++i) {
+    for (unsigned int i = 1; i<argc; ++i) {
         if (argv[i][0] == '-' || argv[i][0] == '/') {
             switch (argv[i][1]) {
             case 'o':if (i + 1<argc) { filenameOut = argv[++i]; }break;
@@ -59,8 +59,8 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-	HCADecodeService dec{}; // Start decode service
-	auto fileslist = new std::pair<std::string, std::pair<void*, size_t>>[count];
+    HCADecodeService dec{}; // Start decode service
+    auto fileslist = new std::pair<std::string, std::pair<void*, size_t>>[count];
 
     // デコード
     for (unsigned int i = 0; i<count; ++i) {
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         // デフォルト出力ファイル名
         char path[MAX_PATH];
         if (!(filenameOut&&filenameOut[0])) {
-			path[0] = '\0';
+            path[0] = '\0';
             strncat(path, argv[i], sizeof(path) - 1);
             char *d1 = strrchr(path, '\\');
             char *d2 = strrchr(path, '/');
@@ -106,34 +106,34 @@ int main(int argc, char *argv[]) {
             {
                 printf("Error: デコードに失敗しました。\n");
             }
-			else
-			{
-				fileslist[i] = std::make_pair(std::string(filenameOut), wavout);
-			}
+            else
+            {
+                fileslist[i] = std::make_pair(std::string(filenameOut), wavout);
+            }
         }
     }
 
-	for (unsigned int i = 0; i < count; ++i)
-	{
-		printf("%s を書き込み中...\n", fileslist[i].first.c_str());
-		FILE* outfile = fopen(fileslist[i].first.c_str(), "wb");
-		if (!outfile)
-		{
-			printf("Error: WAVEファイルの作成に失敗しました。\n");
-			dec.cancel_decode(fileslist[i].second.first);
-		}
-		else
-		{
-			dec.wait_on_request(fileslist[i].second.first);
-			fwrite(fileslist[i].second.first, 1, fileslist[i].second.second, outfile);
-			fclose(outfile);
-		}
-		operator delete(fileslist[i].second.first);
-	}
+    for (unsigned int i = 0; i < count; ++i)
+    {
+        printf("%s を書き込み中...\n", fileslist[i].first.c_str());
+        FILE* outfile = fopen(fileslist[i].first.c_str(), "wb");
+        if (!outfile)
+        {
+            printf("Error: WAVEファイルの作成に失敗しました。\n");
+            dec.cancel_decode(fileslist[i].second.first);
+        }
+        else
+        {
+            dec.wait_on_request(fileslist[i].second.first);
+            fwrite(fileslist[i].second.first, 1, fileslist[i].second.second, outfile);
+            fclose(outfile);
+        }
+        operator delete(fileslist[i].second.first);
+    }
 
     //}
 
-	delete[] fileslist;
+    delete[] fileslist;
 
     return 0;
 }

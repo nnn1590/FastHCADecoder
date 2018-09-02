@@ -9,14 +9,14 @@ HCADecodeService::HCADecodeService()
       workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
-	  wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
+      wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ 24 },
       datasem{ 0 },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
-	  stopcurrent{ false }
+      stopcurrent{ false }
 {
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
@@ -33,14 +33,14 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
-	  wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
+      wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ chunksize ? chunksize : 24 },
       datasem{ 0 },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
-	  stopcurrent{ false }
+      stopcurrent{ false }
 {
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
@@ -55,8 +55,8 @@ HCADecodeService::~HCADecodeService()
     shutdown = true;
     datasem.notify();
     dispatchthread.join();
-	delete[] workingblocks;
-	delete[] wavebuffer;
+    delete[] workingblocks;
+    delete[] wavebuffer;
     delete[] channels;
     delete[] workersem;
     delete[] workerthreads;
@@ -68,19 +68,19 @@ void HCADecodeService::cancel_decode(void *ptr)
     {
         return;
     }
-	if (workingrequest == ptr)
-	{
-		stopcurrent = true;
-		wait_on_all_threads(wavoutsem);
-	}
-	else
+    if (workingrequest == ptr)
+    {
+        stopcurrent = true;
+        wait_on_all_threads(wavoutsem);
+    }
+    else
     {
         std::unique_lock<std::mutex> filelistlock(filelistmtx);
 
         auto it = filelist.find(ptr);
         if (it != filelist.end())
         {
-			filelist.erase(it);
+            filelist.erase(it);
             datasem.wait();
         }
     }
@@ -92,28 +92,28 @@ void HCADecodeService::wait_on_request(void *ptr)
     {
         return;
     }
-	if (workingrequest == ptr)
-	{
-		std::lock_guard<std::mutex> lck(workingmtx);
-	}
-	else
-	{
-		while (true)
-		{
-			filelistmtx.lock();
-			auto it = filelist.find(ptr);
-			if (it != filelist.end())
-			{
-				filelistmtx.unlock();
-				std::lock_guard<std::mutex> lck(workingmtx);
-			}
-			else
-			{
-				filelistmtx.unlock();
-				break;
-			}
-		}
-	}
+    if (workingrequest == ptr)
+    {
+        std::lock_guard<std::mutex> lck(workingmtx);
+    }
+    else
+    {
+        while (true)
+        {
+            filelistmtx.lock();
+            auto it = filelist.find(ptr);
+            if (it != filelist.end())
+            {
+                filelistmtx.unlock();
+                std::lock_guard<std::mutex> lck(workingmtx);
+            }
+            else
+            {
+                filelistmtx.unlock();
+                break;
+            }
+        }
+    }
 }
 
 void HCADecodeService::wait_for_finish()
@@ -208,10 +208,10 @@ void HCADecodeService::Decode_Thread(unsigned int id)
     workersem[id].wait();
     while (workingblocks[id] != -1)
     {
-		wavoutsem.wait();
-		unsigned int offset = id * numchannels;
+        wavoutsem.wait();
+        unsigned int offset = id * numchannels;
         workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), workingblocks[id], workingrequest, chunksize, stopcurrent);
-		wavoutsem.notify();
+        wavoutsem.notify();
         workingblocks[id] = -1;
         mainsem.notify();
         workersem[id].wait();
@@ -220,12 +220,12 @@ void HCADecodeService::Decode_Thread(unsigned int id)
 
 void HCADecodeService::load_next_request()
 {
-	auto it = filelist.begin();
-	workingrequest = it->first;
+    auto it = filelist.begin();
+    workingrequest = it->first;
     workingfile = std::move(it->second.first);
     startingblock = it->second.second;
-	filelist.erase(it);
-	stopcurrent = false;
+    filelist.erase(it);
+    stopcurrent = false;
 }
 
 void HCADecodeService::populate_block_list()
@@ -242,8 +242,8 @@ void HCADecodeService::populate_block_list()
 
 void HCADecodeService::wait_on_all_threads(Semaphore &sem)
 {
-	sem.wait(numthreads);
-	sem.notify(numthreads);
+    sem.wait(numthreads);
+    sem.notify(numthreads);
 }
 
 void HCADecodeService::join_workers()

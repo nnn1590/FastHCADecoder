@@ -136,7 +136,7 @@ private:
     unsigned int _ciph_key1;
     unsigned int _ciph_key2;
     float _rva_volume;
-	float _volume;
+    float _volume;
     unsigned int _comm_len;
     char *_comm_comment;
     class clATH {
@@ -164,8 +164,8 @@ private:
     class clData {
     public:
         clData(void *data, int size);
-        int CheckBit(int bitSize);
-        int GetBit(int bitSize);
+        unsigned int CheckBit(int bitSize);
+        unsigned int GetBit(int bitSize);
         void AddBit(int bitSize);
     private:
         unsigned char *_data;

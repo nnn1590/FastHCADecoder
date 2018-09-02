@@ -39,7 +39,7 @@ private:
     Semaphore mainsem, datasem, wavoutsem;
     std::mutex filelistmtx, workingmtx;
     clHCA::stChannel *channels;
-	float *wavebuffer;
+    float *wavebuffer;
     bool shutdown, stopcurrent;
 };
 
