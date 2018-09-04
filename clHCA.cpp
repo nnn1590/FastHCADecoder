@@ -1235,7 +1235,9 @@ void clHCA::stChannel::Decode2(clData *data) {
             block[i] = base[i] * list3[v];
         }
         else {
-            int v1 = (1 - ((v & 1) << 1))*(v >> 1);
+            int v2 = v >> 1;
+            int v3 = -v2; // Coerce MSVC to output cmove over je instructions
+            int v1 = (v & 1) ? v3: v2;
             block[i] = base[i] * v1;
             if (!v1)data->AddBit(-1);
         }
