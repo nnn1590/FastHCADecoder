@@ -176,11 +176,11 @@ private:
     struct stChannel {
         float block[0x80];
         float base[0x80];
-        char value[0x80];
-        char scale[0x80];
-        char value2[8];
+        unsigned char value[0x80];
+        unsigned char scale[0x80];
+        unsigned char value2[8];
         int type;
-        char *value3;
+        unsigned char *value3;
         unsigned int count;
         float wav1[0x80];
         float wav2[0x80];

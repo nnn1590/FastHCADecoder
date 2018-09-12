@@ -12,12 +12,24 @@
 //--------------------------------------------------
 // インライン関数
 //--------------------------------------------------
+#ifdef _MSC_VER
+#include <stdlib.h>
+// MSVC does not optimize these functions to bswap even on -O2
+inline short bswap(short v) { return _byteswap_ushort(v); }
+inline unsigned short bswap(unsigned short v) { return _byteswap_ushort(v); }
+inline int bswap(int v) { return _byteswap_ulong(v); }
+inline unsigned int bswap(unsigned int v) { return _byteswap_ulong(v); }
+inline long long bswap(long long v) { return _byteswap_uint64(v); }
+inline unsigned long long bswap(unsigned long long v) { return _byteswap_uint64(v); }
+#else
+// gcc and clang optimize these functions to bswap instructions
 inline short bswap(short v) { short r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
 inline unsigned short bswap(unsigned short v) { unsigned short r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
 inline int bswap(int v) { int r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
 inline unsigned int bswap(unsigned int v) { unsigned int r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
 inline long long bswap(long long v) { long long r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
 inline unsigned long long bswap(unsigned long long v) { unsigned long long r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
+#endif // _MSC_VER
 inline float bswap(float v) { unsigned int i = bswap(*(unsigned int *)&v); return *(float *)&i; }
 inline unsigned int ceil2(unsigned int a, unsigned int b) { return (b>0) ? (a / b + ((a%b) ? 1 : 0)) : 0; }
 template <class T> inline T clamp(T val, T min, T max) { return (val > max) ? max : (val < min) ? min : val; }
@@ -909,12 +921,12 @@ void clHCA::clCipher::Init56_CreateTable(unsigned char *r, unsigned char key) {
 clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 16), _bit(0) {}
 unsigned int clHCA::clData::CheckBit(int bitSize) {
     unsigned int v = 0;
-    if (_bit + bitSize <= _size) {
-        static unsigned int mask[] = { 0xFFFFFF,0x7FFFFF,0x3FFFFF,0x1FFFFF,0x0FFFFF,0x07FFFF,0x03FFFF,0x01FFFF };
-        unsigned char *data = &_data[_bit >> 3];
-        v = data[0]; v = (v << 8) | data[1]; v = (v << 8) | data[2];
-        v &= mask[_bit & 7];
-        v >>= 24 - (_bit & 7) - bitSize;
+    int shiftnum = (_bit & 7) + bitSize;
+    if (_bit + bitSize <= _size && shiftnum > 0) {
+        static unsigned int mask[] = { 0xFFFFFFFF,0x7FFFFFFF,0x3FFFFFFF,0x1FFFFFFF,0x0FFFFFFF,0x07FFFFFF,0x03FFFFFF,0x01FFFFFF };
+        unsigned int *data = (unsigned int *)&_data[_bit >> 3];
+        v = bswap(*data) & mask[_bit & 7];
+        v >>= 32 - shiftnum;
     }
     return v;
 }
@@ -1226,20 +1238,20 @@ void clHCA::stChannel::Decode2(clData *data) {
         +0,+0,+1,-1,+2,-2,+3,-3,+4,-4,+5,-5,+6,-6,+7,-7,
     };
     for (unsigned int i = 0; i<count; ++i) {
-        int s = scale[i];
+        unsigned int s = scale[i];
         int bitSize = list1[s];
-        unsigned int v = data->GetBit(bitSize);
-        if (s<8) {
+        int v = data->GetBit(bitSize);
+        if (s & 0xFFFFFFF8) {
+            int v2 = v >> 1;
+            int v3 = -v2; // Coerce MSVC to output cmove instead of je instruction
+            int v1 = (v & 1) ? v3 : v2;
+            block[i] = base[i] * v1;
+            if (!v1)data->AddBit(-1);
+        }
+        else {
             v += s << 4;
             data->AddBit(list2[v] - bitSize);
             block[i] = base[i] * list3[v];
-        }
-        else {
-            int v2 = v >> 1;
-            int v3 = -v2; // Coerce MSVC to output cmove over je instructions
-            int v1 = (v & 1) ? v3: v2;
-            block[i] = base[i] * v1;
-            if (!v1)data->AddBit(-1);
         }
     }
     memset(&block[count], 0, sizeof(float)*(0x80 - count));
