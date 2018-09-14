@@ -1170,12 +1170,12 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
     };
     static float *valueFloat = (float *)valueInt;
     static float *scaleFloat = (float *)scaleInt;
-    int v = data->GetBit(3);
+    unsigned int v = data->GetBit(3);
     if (v >= 6) {
         for (unsigned int i = 0; i<count; ++i)value[i] = data->GetBit(6);
     }
     else if (v) {
-        int v1 = data->GetBit(6), v2 = (1 << v) - 1, v3 = v2 >> 1, v4;
+        unsigned int v1 = data->GetBit(6), v2 = (1 << v) - 1, v3 = v2 >> 1, v4;
         value[0] = v1;
         for (unsigned int i = 1; i<count; ++i) {
             v4 = data->GetBit(v);
@@ -1197,7 +1197,7 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
     for (unsigned int i = 0; i<count; ++i) {
         v = value[i];
         if (v) {
-            v = ath[i] + ((b + i) >> 8) - ((v * 5) / 2) + 1;
+            v = ath[i] + ((b + i) >> 8) - ((v * 5) >> 1) + 1;
             if (v<0)v = 15;
             else if (v >= 0x39)v = 1;
             else v = scalelist[v];
@@ -1239,7 +1239,7 @@ void clHCA::stChannel::Decode2(clData *data) {
     for (unsigned int i = 0; i<count; ++i) {
         unsigned int s = scale[i];
         int bitSize = list1[s];
-        int v = data->GetBit(bitSize);
+        unsigned int v = data->GetBit(bitSize);
         if (s & 0xFFFFFFF8) {
             int v2 = v >> 1;
             int v3 = -v2; // Coerce MSVC to output cmove instead of je instruction
