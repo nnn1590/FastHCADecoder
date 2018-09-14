@@ -548,7 +548,7 @@ bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float vo
 
     // ヘッダチェック
     stHeader header;
-    memset(&header, 0, sizeof(header));
+    //memset(&header, 0, sizeof(header));
     fread(&header, sizeof(header), 1, fp1);
     if (!CheckFile(&header, sizeof(header)))
     {
@@ -646,7 +646,7 @@ bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float vo
 
     sz = wavRiff.riffSize + 8;
     wavptr = operator new(sz);
-    memset(wavptr, 0, sz);
+    //memset(wavptr, 0, sz);
     int seekhead = 0;
     memcpy((char*)wavptr + seekhead, &wavRiff, sizeof(wavRiff));
     seekhead += sizeof(wavRiff);
