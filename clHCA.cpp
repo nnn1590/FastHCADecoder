@@ -43,7 +43,7 @@ clHCA::clHCA(unsigned int ciphKey1, unsigned int ciphKey2, unsigned int subKey) 
     if (subKey)
     {
         unsigned long long key = (unsigned long long) _ciph_key2 << 32 | _ciph_key1;
-        key *= (((unsigned int)subKey << 16) | ((unsigned short)~subKey + 2));
+        key *= (subKey << 16) | ((unsigned short)~subKey + 2);
         _ciph_key1 = key & 0xFFFFFFFF;
         _ciph_key2 = key >> 32;
     }
