@@ -129,9 +129,9 @@ void HCADecodeService::wait_for_finish()
     filelistmtx.unlock();
 }
 
-std::pair<void *, size_t> HCADecodeService::decode(const char *hcafilename, unsigned int decodefromsample, unsigned int ciphKey1, unsigned int ciphKey2, float volume, int mode, int loop)
+std::pair<void *, size_t> HCADecodeService::decode(const char *hcafilename, unsigned int decodefromsample, unsigned int ciphKey1, unsigned int ciphKey2, unsigned int subKey, float volume, int mode, int loop)
 {
-    clHCA hca(ciphKey1, ciphKey2);
+    clHCA hca(ciphKey1, ciphKey2, subKey);
     void *wavptr = nullptr;
     size_t sz = 0;
     hca.Analyze(wavptr, sz, hcafilename, volume, mode, loop);

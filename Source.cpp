@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
     float volume = 1;
     unsigned int ciphKey1 = 0xBC731A85;
     unsigned int ciphKey2 = 0x0002B875;
+    unsigned int subKey = 0;
     int mode = 16;
     int loop = 0;
     bool info = false;
@@ -40,6 +41,7 @@ int main(int argc, char *argv[]) {
             case 'v':volume = (float)atof(argv[++i]); break;
             case 'a':if (i + 1<argc) { ciphKey1 = strtoul(argv[++i], NULL, 16); }break;
             case 'b':if (i + 1<argc) { ciphKey2 = strtoul(argv[++i], NULL, 16); }break;
+            case 's':if (i + 1<argc) { subKey = strtoul(argv[++i], NULL, 16); }break;
             case 'm':if (i + 1<argc) { mode = atoi(argv[++i]); }break;
             case 'l':if (i + 1<argc) { loop = atoi(argv[++i]); }break;
             case 'i':info = true; break;
@@ -92,7 +94,7 @@ int main(int argc, char *argv[]) {
         // 復号化
         else if (decrypt) {
             printf("%s を復号化中...\n", argv[i]);
-            clHCA hca(ciphKey1, ciphKey2);
+            clHCA hca(ciphKey1, ciphKey2, subKey);
             if (!hca.Decrypt(argv[i])) {
                 printf("Error: 復号化に失敗しました。\n");
             }
@@ -101,7 +103,7 @@ int main(int argc, char *argv[]) {
         // デコード
         else {
             printf("%s をデコード中...\n", argv[i]);
-            auto wavout = dec.decode(argv[i], 0, ciphKey1, ciphKey2, volume, mode, loop);
+            auto wavout = dec.decode(argv[i], 0, ciphKey1, ciphKey2, subKey, volume, mode, loop);
             if (!wavout.first)
             {
                 printf("Error: デコードに失敗しました。\n");

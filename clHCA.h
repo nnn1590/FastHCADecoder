@@ -16,7 +16,7 @@
 //--------------------------------------------------
 class clHCA {
 public:
-    clHCA(unsigned int ciphKey1 = 0xBC731A85, unsigned int ciphKey2 = 0x0002B875);
+    clHCA(unsigned int ciphKey1 = 0xBC731A85, unsigned int ciphKey2 = 0x0002B875, unsigned int subKey = 0);
     clHCA &operator=(clHCA &&other) noexcept;
     ~clHCA();
 
@@ -164,8 +164,8 @@ private:
     class clData {
     public:
         clData(void *data, int size);
-        unsigned int CheckBit(int bitSize);
-        unsigned int GetBit(int bitSize);
+        int CheckBit(int bitSize);
+        int GetBit(int bitSize);
         void AddBit(int bitSize);
     private:
         unsigned char *_data;
@@ -184,6 +184,7 @@ private:
         unsigned int count;
         float wav1[0x80];
         float wav2[0x80];
+        float wav3[0x80];
         void Decode1(clData *data, unsigned int a, int b, unsigned char *ath);
         void Decode2(clData *data);
         void Decode3(unsigned int a, unsigned int b, unsigned int c, unsigned int d);

@@ -37,8 +37,17 @@ template <class T> inline T clamp(T val, T min, T max) { return (val > max) ? ma
 //--------------------------------------------------
 // コンストラクタ
 //--------------------------------------------------
-clHCA::clHCA(unsigned int ciphKey1, unsigned int ciphKey2) :
-    _ciph_key1(ciphKey1), _ciph_key2(ciphKey2), _ath(), _cipher(), hcafileptr(nullptr) {}
+clHCA::clHCA(unsigned int ciphKey1, unsigned int ciphKey2, unsigned int subKey) :
+    _ciph_key1(ciphKey1), _ciph_key2(ciphKey2), _ath(), _cipher(), hcafileptr(nullptr)
+{
+    if (subKey)
+    {
+        unsigned long long key = (unsigned long long) _ciph_key2 << 32 | _ciph_key1;
+        key *= (((unsigned int)subKey << 16) | ((unsigned short)~subKey + 2));
+        _ciph_key1 = key & 0xFFFFFFFF;
+        _ciph_key2 = key >> 32;
+    }
+}
 
 clHCA &clHCA::operator=(clHCA &&other) noexcept
 {
@@ -919,7 +928,7 @@ void clHCA::clCipher::Init56_CreateTable(unsigned char *r, unsigned char key) {
 // データ
 //--------------------------------------------------
 clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 16), _bit(0) {}
-unsigned int clHCA::clData::CheckBit(int bitSize) {
+int clHCA::clData::CheckBit(int bitSize) {
     unsigned int v = 0;
     if (_bit + bitSize <= _size && bitSize > 0) {
         static unsigned int mask[] = { 0xFFFFFFFF,0x7FFFFFFF,0x3FFFFFFF,0x1FFFFFFF,0x0FFFFFFF,0x07FFFFFF,0x03FFFFFF,0x01FFFFFF };
@@ -929,7 +938,7 @@ unsigned int clHCA::clData::CheckBit(int bitSize) {
     }
     return v;
 }
-unsigned int clHCA::clData::GetBit(int bitSize) {
+int clHCA::clData::GetBit(int bitSize) {
     unsigned int v = CheckBit(bitSize);
     _bit += bitSize;
     return v;
@@ -1170,14 +1179,14 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
     };
     static float *valueFloat = (float *)valueInt;
     static float *scaleFloat = (float *)scaleInt;
-    unsigned int v = data->GetBit(3);
+    int v = data->GetBit(3);
     if (v >= 6) {
-        for (unsigned int i = 0; i<count; ++i)value[i] = data->GetBit(6);
+        for (unsigned int i = 0; i < count; i++)value[i] = data->GetBit(6);
     }
     else if (v) {
-        unsigned int v1 = data->GetBit(6), v2 = (1 << v) - 1, v3 = v2 >> 1, v4;
+        int v1 = data->GetBit(6), v2 = (1 << v) - 1, v3 = v2 >> 1, v4;
         value[0] = v1;
-        for (unsigned int i = 1; i<count; ++i) {
+        for (unsigned int i = 1; i < count; i++) {
             v4 = data->GetBit(v);
             if (v4 != v2) { v1 += v4 - v3; }
             else { v1 = data->GetBit(6); }
@@ -1189,23 +1198,23 @@ void clHCA::stChannel::Decode1(clData *data, unsigned int a, int b, unsigned cha
     }
     if (type == 2) {
         v = data->CheckBit(4); value2[0] = v;
-        if (v<15)for (unsigned int i = 0; i<8; ++i)value2[i] = data->GetBit(4);
+        if (v < 15)for (int i = 0; i < 8; i++)value2[i] = data->GetBit(4);
     }
     else {
-        for (unsigned int i = 0; i<a; ++i)value3[i] = data->GetBit(6);
+        for (unsigned int i = 0; i < a; i++)value3[i] = data->GetBit(6);
     }
-    for (unsigned int i = 0; i<count; ++i) {
+    for (unsigned int i = 0; i < count; i++) {
         v = value[i];
         if (v) {
             v = ath[i] + ((b + i) >> 8) - ((v * 5) >> 1) + 1;
-            if (v<0)v = 15;
+            if (v < 0)v = 15;
             else if (v >= 0x39)v = 1;
             else v = scalelist[v];
         }
         scale[i] = v;
     }
     memset(&scale[count], 0, 0x80 - count);
-    for (unsigned int i = 0; i<count; ++i) base[i] = valueFloat[value[i]] * scaleFloat[scale[i]];
+    for (unsigned int i = 0; i < count; i++)base[i] = valueFloat[value[i]] * scaleFloat[scale[i]];
 }
 
 //--------------------------------------------------
