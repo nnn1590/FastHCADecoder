@@ -1110,7 +1110,6 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
 
 bool clHCA::PrepDecode(stChannel* channels, unsigned int numthreads)
 {
-    memset(channels, 0, sizeof(stChannel) * numthreads * _channelCount);
     if (!(_comp_r01 == 1 && _comp_r02 == 15))return false;
     _comp_r09 = ceil2(_comp_r05 - (_comp_r06 + _comp_r07), _comp_r08);
     char r[0x10]; memset(r, 0, sizeof(r));
