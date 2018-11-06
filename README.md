@@ -2,20 +2,15 @@
 
 This program is strictly for decoding to WAV quickly. If you need a HCA streaming library, consider using [libcgss](https://github.com/hozuki/libcgss).
 
-![Screenshot](https://i.imgur.com/1KMoMsf.png)
+![Screenshot](https://i.imgur.com/Px6cAEJ.png)
 Comparison between original and fast hca decoders were performed on an i7-920.
 
 # Changes to original
  - Multithreaded CRI HCA decoding (much higher performance)
- - Fixed data chunk size
- - Fixed smpl chunk loop points
- - Fixed looping (original cut samples off the end)
- 
-# Changes in JP
- - マルチスレッド化
- - dataチャンク修正
- - smplチャンク修正
- - ループ修正
+ - Fixed WAV data chunk size
+ - Fixed WAV smpl chunk loop points
+ - Fixed looping
+ - Added support for newer hca files that require a subkey
 
 # HCAファイルのデコード方法
 
