@@ -3,7 +3,7 @@
 This program is strictly for decoding to WAV quickly. If you need a HCA streaming library, consider using [libcgss](https://github.com/hozuki/libcgss).
 
 ![Screenshot](https://i.imgur.com/Px6cAEJ.png)
-Comparison between original and fast hca decoders were performed on an i7-920.
+Comparison between the original decoder and fast hca decoder (x64) was performed on an i7-920.
 
 # Changes to original
  - Multithreaded CRI HCA decoding (much higher performance)
