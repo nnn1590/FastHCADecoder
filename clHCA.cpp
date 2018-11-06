@@ -709,10 +709,13 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
             for (unsigned int i = 0; i < _channelCount; ++i) channels[i].Decode1(&d, _comp_r09, a, _ath.GetTable());
             for (unsigned int i = 0; i < 8; ++i) {
                 for (unsigned int j = 0; j < _channelCount; ++j) channels[j].Decode2(&d);
-                for (unsigned int j = 0; j < _channelCount; ++j) channels[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
-                for (unsigned int j = 0; j < _channelCount - 1; ++j) channels[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
-                if (stop) return;
-                for (unsigned int j = 0; j < _channelCount; ++j) channels[j].Decode5(wavebuffer + j, _channelCount, _volume);
+                if (currblock >= blocknum || i == 7)
+                {
+                    for (unsigned int j = 0; j < _channelCount; ++j) channels[j].Decode3(_comp_r09, _comp_r08, _comp_r07 + _comp_r06, _comp_r05);
+                    for (unsigned int j = 0; j < _channelCount - 1; ++j) channels[j].Decode4(i, _comp_r05 - _comp_r06, _comp_r06, _comp_r07);
+                    if (stop) return;
+                    for (unsigned int j = 0; j < _channelCount; ++j) channels[j].Decode5(wavebuffer + j, _channelCount, _volume);
+                }
                 if (stop) return;
                 if (currblock >= blocknum)
                 {
