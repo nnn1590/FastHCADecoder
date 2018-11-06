@@ -184,7 +184,6 @@ private:
         unsigned int count;
         float wav1[0x80];
         float wav2[0x80];
-        float wav3[0x80];
         void Decode1(clData *data, unsigned int a, int b, unsigned char *ath);
         void Decode2(clData *data);
         void Decode3(unsigned int a, unsigned int b, unsigned int c, unsigned int d);

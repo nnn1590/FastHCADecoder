@@ -691,13 +691,19 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
     unsigned int samplesize = _mode >> 3;
     char *outwavptr = (char *)outputwavptr + (samplesize * blocknum * _channelCount << 10) + _wavheadersize;
     unsigned int loopsize = ((_loopEnd - _loopStart) << 10) * samplesize * _channelCount;
-    if (blocknum == 0)  PrepDecode(channels, 1);
+    if (blocknum == 0)
+    {
+        for (unsigned int i = 0; i < _channelCount; ++i)
+        {
+            memset(channels[i].wav2, 0, 512); // Clear previous IMCDT result
+        }
+    }
     unsigned int endblock = blocknum + chunksize;
     for (unsigned int currblock = blocknum ? blocknum - 1 : blocknum; currblock < endblock && currblock < _blockCount; ++currblock)
     {
         //        if(((unsigned char *)data)[_blockSize-2]==0x5E)_asm int 3
         clData d(hcafileptr + (currblock * _blockSize), _blockSize);
-        int magic = d.GetBit(16);// Fixed as 0xFFFF
+        int magic = d.GetBit(16); // Fixed as 0xFFFF
         if (magic == 0xFFFF) {
             int a = (d.GetBit(9) << 8) - d.GetBit(7);
             for (unsigned int i = 0; i < _channelCount; ++i) channels[i].Decode1(&d, _comp_r09, a, _ath.GetTable());
