@@ -695,7 +695,7 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
     {
         for (unsigned int i = 0; i < _channelCount; ++i)
         {
-            memset(channels[i].wav2, 0, 512); // Clear previous IMCDT result
+            memset(channels[i].wav2, 0, 512); // Clear previous IMDCT result
         }
     }
     unsigned int endblock = blocknum + chunksize;
