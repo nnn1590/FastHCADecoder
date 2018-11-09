@@ -1491,36 +1491,36 @@ void clHCA::stChannel::Decode5(float* wavebuffer, unsigned int channelCount, flo
         }
     };
     float *s, *d, *s1, *s2;
-    s = block - 1; d = wav1;
+    s = block; d = wav1;
     for (unsigned int i = 0, count1 = 1, count2 = 0x40; i<7; ++i, count1 <<= 1, count2 >>= 1) {
-        float *d1 = d - 1;
-        float *d2 = &d[count2] - 1;
+        float *d1 = d;
+        float *d2 = &d[count2];
         for (unsigned int j = 0; j<count1; ++j) {
             for (unsigned int k = 0; k<count2; ++k) {
-                float a = *(++s);
-                float b = *(++s);
-                *(++d1) = b + a;
-                *(++d2) = a - b;
+                float a = *(s++);
+                float b = *(s++);
+                *(d1++) = b + a;
+                *(d2++) = a - b;
             }
             d1 += count2;
             d2 += count2;
         }
-        float *w = &s[-0x7F]; s = d - 1; d = w;
+        float *w = &s[-0x80]; s = d; d = w;
     }
     s = wav1; d = block;
     for (unsigned int i = 0, count1 = 0x40, count2 = 1; i<7; ++i, count1 >>= 1, count2 <<= 1) {
-        float *list1Float = (float *)list1Int[i] - 1;
-        float *list2Float = (float *)list2Int[i] - 1;
-        float *s1 = s - 1;
-        float *s2 = &s[count2] - 1;
+        float *list1Float = (float *)list1Int[i];
+        float *list2Float = (float *)list2Int[i];
+        float *s1 = s;
+        float *s2 = &s[count2];
         float *d1 = d;
         float *d2 = &d1[count2 * 2 - 1];
         for (unsigned int j = 0; j<count1; ++j) {
             for (unsigned int k = 0; k<count2; ++k) {
-                float a = *(++s1);
-                float b = *(++s2);
-                float c = *(++list1Float);
-                float d = *(++list2Float);
+                float a = *(s1++);
+                float b = *(s2++);
+                float c = *(list1Float++);
+                float d = *(list2Float++);
                 *(d1++) = a * c - b * d;
                 *(d2--) = a * d + b * c;
             }
