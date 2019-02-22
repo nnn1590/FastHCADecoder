@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
     unsigned int subKey = 0;
     int mode = 16;
     int loop = 0;
+    unsigned int threads = 0;
     bool info = false;
     bool decrypt = false;
     for (unsigned int i = 1; i<argc; ++i) {
@@ -44,6 +45,7 @@ int main(int argc, char *argv[]) {
             case 's':if (i + 1<argc) { subKey = strtoul(argv[++i], NULL, 16); }break;
             case 'm':if (i + 1<argc) { mode = atoi(argv[++i]); }break;
             case 'l':if (i + 1<argc) { loop = atoi(argv[++i]); }break;
+            case 't':if (i + 1<argc) { threads = atoi(argv[++i]); }break;
             case 'i':info = true; break;
             case 'c':decrypt = true; break;
             }
@@ -61,7 +63,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    HCADecodeService dec{}; // Start decode service
+    HCADecodeService dec{ threads }; // Start decode service
     auto fileslist = new std::pair<std::string, std::pair<void*, size_t>>[count];
 
     // デコード
