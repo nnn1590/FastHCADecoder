@@ -936,7 +936,7 @@ void clHCA::clCipher::Init56_CreateTable(unsigned char *r, unsigned char key) {
 //--------------------------------------------------
 // データ
 //--------------------------------------------------
-clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8), _bit(0) {}
+clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 16), _bit(0) {}
 int clHCA::clData::CheckBit(int bitSize) {
     unsigned int v = 0;
     if (_bit + bitSize <= _size && bitSize > 0) {
