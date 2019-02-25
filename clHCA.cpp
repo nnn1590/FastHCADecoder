@@ -936,14 +936,15 @@ void clHCA::clCipher::Init56_CreateTable(unsigned char *r, unsigned char key) {
 //--------------------------------------------------
 // データ
 //--------------------------------------------------
-clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 16), _bit(0) {}
+clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8), _bit(0) {}
 int clHCA::clData::CheckBit(int bitSize) {
     unsigned int v = 0;
     if (_bit + bitSize <= _size && bitSize > 0) {
         static unsigned int mask[] = { 0xFFFFFFFF,0x7FFFFFFF,0x3FFFFFFF,0x1FFFFFFF,0x0FFFFFFF,0x07FFFFFF,0x03FFFFFF,0x01FFFFFF };
         unsigned int *data = (unsigned int *)&_data[_bit >> 3];
-        v = bswap(*data) & mask[_bit & 7];
-        v >>= 32 - (_bit & 7) - bitSize;
+        unsigned int shift_bits = _bit & 7;
+        v = bswap(*data) & mask[shift_bits];
+        v >>= 32 - (shift_bits) - bitSize;
     }
     return v;
 }
