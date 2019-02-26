@@ -938,13 +938,13 @@ void clHCA::clCipher::Init56_CreateTable(unsigned char *r, unsigned char key) {
 //--------------------------------------------------
 // データ
 //--------------------------------------------------
-clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 16), _bit(0) {}
+clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 24), _bit(-8) {}
 int clHCA::clData::CheckBit(int bitSize) {
     int v = 0;
     if (bitSize <= _size - _bit)
     {
         static unsigned int mask[] = { 0xFFFFFF,0x7FFFFF,0x3FFFFF,0x1FFFFF,0x0FFFFF,0x07FFFF,0x03FFFF,0x01FFFF };
-        unsigned int *data = (unsigned int *)&_data[(_bit >> 3) - 1];
+        unsigned int *data = (unsigned int *)&_data[_bit >> 3];
         unsigned int shift_bits = _bit & 7;
         v = bswap(*data) & mask[shift_bits];
         v >>= 24 - shift_bits - bitSize;
