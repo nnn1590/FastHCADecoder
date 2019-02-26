@@ -53,6 +53,7 @@ clHCA &clHCA::operator=(clHCA &&other) noexcept
 {
     delete[] hcafileptr;
     hcafileptr = other.hcafileptr;
+    hcadata = other.hcadata;
     other.hcafileptr = nullptr;
     _version = other._version;
     _dataOffset = other._dataOffset;
@@ -674,10 +675,11 @@ bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float vo
     memcpy((char*)wavptr + seekhead, &wavData, sizeof(wavData));
     seekhead += sizeof(wavRiff);
     delete[] data1;
-    hcafileptr = new unsigned char[_blockCount * _blockSize];
+    hcafileptr = new unsigned char[_blockCount * _blockSize + 1];
+    hcadata = hcafileptr + 1;
     fseek(fp1, header.dataOffset, SEEK_SET);
-    fread(hcafileptr, _blockCount, _blockSize, fp1);
-    _cipher.Mask(hcafileptr, _blockCount * _blockSize);
+    fread(hcadata, _blockCount, _blockSize, fp1);
+    _cipher.Mask(hcadata, _blockCount * _blockSize);
     _wavheadersize = wavRiff.riffSize - wavData.dataSize + 8;
     _loopNum = loop;
     // 閉じる
@@ -702,7 +704,7 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
     for (unsigned int currblock = blocknum ? blocknum - 1 : blocknum; currblock < endblock && currblock < _blockCount; ++currblock)
     {
         //        if(((unsigned char *)data)[_blockSize-2]==0x5E)_asm int 3
-        clData d(hcafileptr + (currblock * _blockSize), _blockSize);
+        clData d(hcadata + (currblock * _blockSize), _blockSize);
         int magic = d.GetBit(16); // Fixed as 0xFFFF
         if (magic == 0xFFFF) {
             int a = (d.GetBit(9) << 8) - d.GetBit(7);

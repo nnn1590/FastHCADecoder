@@ -196,7 +196,7 @@ private:
     private:
     unsigned int _mode;
     unsigned int _loopNum;
-    unsigned char *hcafileptr;
+    unsigned char *hcafileptr, *hcadata;
     unsigned int _wavheadersize;
     bool Decode(void *data, unsigned int size, unsigned int address);
     void (*_modeFunction)(float, void *);
