@@ -208,10 +208,10 @@ void HCADecodeService::Decode_Thread(unsigned int id)
     workersem[id].wait();
     while (workingblocks[id] != -1)
     {
-        wavoutsem.wait();
+        //wavoutsem.wait();
         unsigned int offset = id * numchannels;
         workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), workingblocks[id], workingrequest, chunksize, stopcurrent);
-        wavoutsem.notify();
+        //wavoutsem.notify();
         workingblocks[id] = -1;
         mainsem.notify();
         workersem[id].wait();

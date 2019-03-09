@@ -91,6 +91,7 @@ clHCA &clHCA::operator=(clHCA &&other) noexcept
     _volume = other._volume;
     _mode = other._mode;
     _modeFunction = other._modeFunction;
+    _modeFunction2 = other._modeFunction2;
     _wavheadersize = other._wavheadersize;
     return *this;
 }
@@ -644,14 +645,12 @@ bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float vo
     wavData.dataSize = wavRiff.fmtSamplingSize*((_blockCount << 10) + (wavSmpl.loop_End - wavSmpl.loop_Start) * loop);
     wavRiff.riffSize = 0x1C + ((_loopFlg && !loop) ? sizeof(wavSmpl) : 0) + (_comm_comment ? 8 + wavNote.noteSize : 0) + sizeof(wavData) + wavData.dataSize;
 
-    _modeFunction = DecodeToMemory_DecodeMode16bit;
-    _mode = 16;
     switch (mode) {
-    case 0:_modeFunction = DecodeToMemory_DecodeModeFloat; _mode = 32; break;
-    case 8:_modeFunction = DecodeToMemory_DecodeMode8bit; _mode = 8; break;
-    case 16:_modeFunction = DecodeToMemory_DecodeMode16bit; _mode = 16; break;
-    case 24:_modeFunction = DecodeToMemory_DecodeMode24bit; _mode = 24; break;
-    case 32:_modeFunction = DecodeToMemory_DecodeMode32bit; _mode = 32; break;
+    case 0:_modeFunction = DecodeToMemory_DecodeModeFloat; _modeFunction2 = DecodeToMemory_DecodeModeFloat; _mode = 32; break;
+    case 8:_modeFunction = DecodeToMemory_DecodeMode8bit; _modeFunction2 = DecodeToMemory_DecodeMode8bit; _mode = 8; break;
+    case 16:_modeFunction = DecodeToMemory_DecodeMode16bit; _modeFunction2 = DecodeToMemory_DecodeMode16bit; _mode = 16; break;
+    case 24:_modeFunction = DecodeToMemory_DecodeMode24bit; _modeFunction2 = DecodeToMemory_DecodeMode24bit; _mode = 24; break;
+    case 32:_modeFunction = DecodeToMemory_DecodeMode32bit; _modeFunction2 = DecodeToMemory_DecodeMode32bit; _mode = 32; break;
     }
 
     sz = wavRiff.riffSize + 8;
@@ -722,25 +721,167 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
                 if (currblock >= blocknum)
                 {
                     unsigned int numsamples = _channelCount << 7;
-                    for (unsigned int j = 0; j < numsamples; ++j, outwavptr += samplesize) {
-                        if (currblock < _loopStart)
-                        {
-                            _modeFunction(wavebuffer[j], outwavptr);
-                        }
-                        else if (currblock < _loopEnd)
-                        {
-                            for (unsigned int l = 0; l <= _loopNum; ++l)
-                            {
-                                _modeFunction(wavebuffer[j], outwavptr + l * loopsize);
-                            }
-                        }
-                        else
-                        {
-                            _modeFunction(wavebuffer[j], outwavptr + _loopNum * loopsize);
-                        }
-                    }
+                    _modeFunction2(this, currblock, outwavptr, wavebuffer);
+                    outwavptr += samplesize * numsamples;
                 }
             }
+        }
+    }
+}
+
+void clHCA::DecodeToMemory_DecodeModeFloat(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer) {
+    char *wavptr = (char *)ptr;
+    unsigned int numsamples = clhca->_channelCount << 7;
+    unsigned int samplesize = clhca->_mode >> 3;
+    unsigned int loopsize = ((clhca->_loopEnd - clhca->_loopStart) << 10) * samplesize *  clhca->_channelCount;
+    if (clhca->_loopNum)
+    {
+        if (currblock < clhca->_loopStart)
+        {
+            memcpy(wavptr, buffer, numsamples * samplesize);
+        }
+        else if (currblock < clhca->_loopEnd)
+        {
+            for (unsigned int l = 0; l <= clhca->_loopNum; ++l)
+            {
+                memcpy(wavptr + l * loopsize, buffer, numsamples * samplesize);
+            }
+        }
+        else
+        {
+            memcpy(wavptr + clhca->_loopNum * loopsize, buffer, numsamples * samplesize);
+        }
+    }
+    else
+    {
+        memcpy(wavptr, buffer, numsamples * samplesize);
+    }
+}
+void clHCA::DecodeToMemory_DecodeMode8bit (clHCA *clhca, unsigned int currblock, void *ptr, float *buffer) {
+    char *wavptr = (char *)ptr;
+    unsigned int numsamples = clhca->_channelCount << 7;
+    unsigned int samplesize = clhca->_mode >> 3;
+    unsigned int loopsize = ((clhca->_loopEnd - clhca->_loopStart) << 10) * samplesize *  clhca->_channelCount;
+    if (clhca->_loopNum)
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            if (currblock < clhca->_loopStart)
+            {
+                DecodeToMemory_DecodeMode8bit(buffer[j], wavptr);
+            }
+            else if (currblock < clhca->_loopEnd)
+            {
+                for (unsigned int l = 0; l <= clhca->_loopNum; ++l)
+                {
+                    DecodeToMemory_DecodeMode8bit(buffer[j], wavptr + l * loopsize);
+                }
+            }
+            else
+            {
+                DecodeToMemory_DecodeMode8bit(buffer[j], wavptr + clhca->_loopNum * loopsize);
+            }
+        }
+    }
+    else
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            DecodeToMemory_DecodeMode8bit(buffer[j], wavptr);
+        }
+    }
+}
+void clHCA::DecodeToMemory_DecodeMode16bit(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer) {
+    char *wavptr = (char *)ptr;
+    unsigned int numsamples = clhca->_channelCount << 7;
+    unsigned int samplesize = clhca->_mode >> 3;
+    unsigned int loopsize = ((clhca->_loopEnd - clhca->_loopStart) << 10) * samplesize *  clhca->_channelCount;
+    if (clhca->_loopNum)
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            if (currblock < clhca->_loopStart)
+            {
+                DecodeToMemory_DecodeMode16bit(buffer[j], wavptr);
+            }
+            else if (currblock < clhca->_loopEnd)
+            {
+                for (unsigned int l = 0; l <= clhca->_loopNum; ++l)
+                {
+                    DecodeToMemory_DecodeMode16bit(buffer[j], wavptr + l * loopsize);
+                }
+            }
+            else
+            {
+                DecodeToMemory_DecodeMode16bit(buffer[j], wavptr + clhca->_loopNum * loopsize);
+            }
+        }
+    }
+    else
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            DecodeToMemory_DecodeMode16bit(buffer[j], wavptr);
+        }
+    }
+}
+void clHCA::DecodeToMemory_DecodeMode24bit(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer) {
+    char *wavptr = (char *)ptr;
+    unsigned int numsamples = clhca->_channelCount << 7;
+    unsigned int samplesize = clhca->_mode >> 3;
+    unsigned int loopsize = ((clhca->_loopEnd - clhca->_loopStart) << 10) * samplesize *  clhca->_channelCount;
+    if (clhca->_loopNum)
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            if (currblock < clhca->_loopStart)
+            {
+                DecodeToMemory_DecodeMode24bit(buffer[j], wavptr);
+            }
+            else if (currblock < clhca->_loopEnd)
+            {
+                for (unsigned int l = 0; l <= clhca->_loopNum; ++l)
+                {
+                    DecodeToMemory_DecodeMode24bit(buffer[j], wavptr + l * loopsize);
+                }
+            }
+            else
+            {
+                DecodeToMemory_DecodeMode24bit(buffer[j], wavptr + clhca->_loopNum * loopsize);
+            }
+        }
+    }
+    else
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            DecodeToMemory_DecodeMode24bit(buffer[j], wavptr);
+        }
+    }
+}
+void clHCA::DecodeToMemory_DecodeMode32bit(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer) {
+    char *wavptr = (char *)ptr;
+    unsigned int numsamples = clhca->_channelCount << 7;
+    unsigned int samplesize = clhca->_mode >> 3;
+    unsigned int loopsize = ((clhca->_loopEnd - clhca->_loopStart) << 10) * samplesize *  clhca->_channelCount;
+    if (clhca->_loopNum)
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            if (currblock < clhca->_loopStart)
+            {
+                DecodeToMemory_DecodeMode32bit(buffer[j], wavptr);
+            }
+            else if (currblock < clhca->_loopEnd)
+            {
+                for (unsigned int l = 0; l <= clhca->_loopNum; ++l)
+                {
+                    DecodeToMemory_DecodeMode32bit(buffer[j], wavptr + l * loopsize);
+                }
+            }
+            else
+            {
+                DecodeToMemory_DecodeMode32bit(buffer[j], wavptr + clhca->_loopNum * loopsize);
+            }
+        }
+    }
+    else
+    {
+        for (unsigned int j = 0; j < numsamples; ++j, wavptr += samplesize) {
+            DecodeToMemory_DecodeMode32bit(buffer[j], wavptr);
         }
     }
 }

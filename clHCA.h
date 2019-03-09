@@ -199,12 +199,18 @@ private:
     unsigned char *hcafileptr, *hcadata;
     unsigned int _wavheadersize;
     bool Decode(void *data, unsigned int size, unsigned int address);
+    void (*_modeFunction2)(clHCA *, unsigned int, void *, float *);
     void (*_modeFunction)(float, void *);
     static void DecodeToMemory_DecodeModeFloat(float f, void *ptr);
     static void DecodeToMemory_DecodeMode8bit (float f, void *ptr);
     static void DecodeToMemory_DecodeMode16bit(float f, void *ptr);
     static void DecodeToMemory_DecodeMode24bit(float f, void *ptr);
     static void DecodeToMemory_DecodeMode32bit(float f, void *ptr);
+    static void DecodeToMemory_DecodeModeFloat(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer);
+    static void DecodeToMemory_DecodeMode8bit (clHCA *clhca, unsigned int currblock, void *ptr, float *buffer);
+    static void DecodeToMemory_DecodeMode16bit(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer);
+    static void DecodeToMemory_DecodeMode24bit(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer);
+    static void DecodeToMemory_DecodeMode32bit(clHCA *clhca, unsigned int currblock, void *ptr, float *buffer);
 };
 
 #endif // CLHCA_H
