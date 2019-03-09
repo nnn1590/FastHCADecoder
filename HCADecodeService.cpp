@@ -5,7 +5,7 @@
 HCADecodeService::HCADecodeService()
     : numthreads{ std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1 },
       mainsem{ this->numthreads },
-      wavoutsem{ this->numthreads },
+      //wavoutsem{ this->numthreads },
       workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
@@ -29,7 +29,7 @@ HCADecodeService::HCADecodeService()
 HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksize)
     : numthreads{ numthreads ? numthreads : (std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1) },
       mainsem{ this->numthreads },
-      wavoutsem{ this->numthreads },
+      //wavoutsem{ this->numthreads },
       workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
@@ -71,7 +71,7 @@ void HCADecodeService::cancel_decode(void *ptr)
     if (workingrequest == ptr)
     {
         stopcurrent = true;
-        wait_on_all_threads(wavoutsem);
+        //wait_on_all_threads(wavoutsem);
     }
     else
     {
