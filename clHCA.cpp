@@ -691,7 +691,6 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
     if (stop) return;
     unsigned int samplesize = _mode >> 3;
     char *outwavptr = (char *)outputwavptr + (samplesize * blocknum * _channelCount << 10) + _wavheadersize;
-    unsigned int loopsize = ((_loopEnd - _loopStart) << 10) * samplesize * _channelCount;
     if (blocknum == 0)
     {
         for (unsigned int i = 0; i < _channelCount; ++i)
