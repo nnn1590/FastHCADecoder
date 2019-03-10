@@ -10,7 +10,7 @@ HCADecodeService::HCADecodeService()
       chunksize{ 24 },
       workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
-      mainsem{ 0 },
+      mainsem{ this->numthreads },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
@@ -31,7 +31,7 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       chunksize{ chunksize ? chunksize : 24 },
       workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
-      mainsem{ 0 },
+      mainsem{ this->numthreads },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
@@ -171,6 +171,7 @@ void HCADecodeService::Main_Thread()
             workersem[i].notify();
         }
         
+        mainsem.wait(numthreads);
         wait_on_all_threads(mainsem);
     
         workingrequest = nullptr;
