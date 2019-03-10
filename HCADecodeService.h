@@ -25,8 +25,6 @@ private:
     void Decode_Thread(unsigned int id);
     void load_next_request();
     void populate_block_list();
-    void wait_on_all_threads(Semaphore &sem);
-    void join_workers();
 
     clHCA workingfile;
     unsigned int numthreads, numchannels, chunksize, startingblock;
@@ -35,9 +33,7 @@ private:
     std::thread *workerthreads;
     std::map<void *, std::pair<clHCA, unsigned int>> filelist;
     std::deque<unsigned int> blocks;
-    //int *workingblocks;
-    Semaphore *workersem;
-    Semaphore mainsem, datasem; //wavoutsem;
+    Semaphore datasem;
     std::mutex filelistmtx, workingmtx;
     clHCA::stChannel *channels;
     float *wavebuffer;
