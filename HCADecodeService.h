@@ -6,6 +6,7 @@
 #include <deque>
 #include <map>
 #include <mutex>
+#include <atomic>
 #include "Semaphore.h"
 #include "clHCA.h"
 
@@ -34,13 +35,14 @@ private:
     std::thread *workerthreads;
     std::map<void *, std::pair<clHCA, unsigned int>> filelist;
     std::deque<unsigned int> blocks;
-    int *workingblocks;
+    //int *workingblocks;
     Semaphore *workersem;
     Semaphore mainsem, datasem; //wavoutsem;
     std::mutex filelistmtx, workingmtx;
     clHCA::stChannel *channels;
     float *wavebuffer;
     bool shutdown, stopcurrent;
+    std::atomic<unsigned int> currindex;
 };
 
 #endif //HCADECODESERVICE_H

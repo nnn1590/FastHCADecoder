@@ -6,7 +6,7 @@ HCADecodeService::HCADecodeService()
     : numthreads{ std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1 },
       mainsem{ this->numthreads },
       //wavoutsem{ this->numthreads },
-      workingblocks{ new int[this->numthreads] },
+      //workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
       wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
@@ -18,11 +18,12 @@ HCADecodeService::HCADecodeService()
       shutdown{ false },
       stopcurrent{ false }
 {
+    /*
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
         workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
-        workingblocks[i] = -1;
-    }
+        //workingblocks[i] = -1;
+    }*/
     dispatchthread = std::thread{ &HCADecodeService::Main_Thread, this };
 }
 
@@ -30,7 +31,7 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
     : numthreads{ numthreads ? numthreads : (std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1) },
       mainsem{ this->numthreads },
       //wavoutsem{ this->numthreads },
-      workingblocks{ new int[this->numthreads] },
+      //workingblocks{ new int[this->numthreads] },
       workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
       wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
@@ -42,11 +43,12 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       shutdown{ false },
       stopcurrent{ false }
 {
+    /*
     for (unsigned int i = 0; i < this->numthreads; ++i)
     {
         workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
-        workingblocks[i] = -1;
-    }
+        //workingblocks[i] = -1;
+    }*/
     dispatchthread = std::thread{ &HCADecodeService::Main_Thread, this };
 }
 
@@ -55,7 +57,7 @@ HCADecodeService::~HCADecodeService()
     shutdown = true;
     datasem.notify();
     dispatchthread.join();
-    delete[] workingblocks;
+    //delete[] workingblocks;
     delete[] wavebuffer;
     delete[] channels;
     delete[] workersem;
@@ -172,50 +174,36 @@ void HCADecodeService::Main_Thread()
 
         populate_block_list();
 
-        while(!blocks.empty() && workingrequest)
+        currindex = 0;
+
+        for (unsigned int i = 0; i < numthreads; ++i)
         {
-            mainsem.wait();
-            for (unsigned int i = 0; i < numthreads; ++i)
-            {
-                if (blocks.empty())
-                {
-                    mainsem.notify();
-                    goto OUT;
-                }
-                if (workingblocks[i] == -1)
-                {
-                    workingblocks[i] = blocks.front();
-                    blocks.pop_front();
-                    workersem[i].notify();
-                    mainsem.wait();
-                }
-            }
-            mainsem.notify();
+            workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
+        }
+
+        for (unsigned int i = 0; i < numthreads; ++i)
+        {
+            workerthreads[i].join();
         }
     
-    OUT:
-        wait_on_all_threads(mainsem);
         workingrequest = nullptr;
 
         workingmtx.unlock();
     }
-
-    join_workers();
 }
 
 void HCADecodeService::Decode_Thread(unsigned int id)
 {
-    workersem[id].wait();
-    while (workingblocks[id] != -1)
+    unsigned int offset = id * numchannels;
+    unsigned int bindex = currindex++;
+    //wavoutsem.wait();
+    while (bindex < blocks.size())
     {
-        //wavoutsem.wait();
-        unsigned int offset = id * numchannels;
-        workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), workingblocks[id], workingrequest, chunksize, stopcurrent);
-        //wavoutsem.notify();
-        workingblocks[id] = -1;
-        mainsem.notify();
-        workersem[id].wait();
+        workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), blocks[bindex], workingrequest, chunksize, stopcurrent);
+        bindex = currindex++;
     }
+    //wavoutsem.notify();
+    //workingblocks[id] = -1;
 }
 
 void HCADecodeService::load_next_request()
