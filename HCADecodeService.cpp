@@ -8,12 +8,18 @@ HCADecodeService::HCADecodeService()
       wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ 24 },
+      workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
+      mainsem{ 0 },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
       stopcurrent{ false }
 {
+    for (unsigned int i = 0; i < this->numthreads; ++i)
+    {
+        workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
+    }
     dispatchthread = std::thread{ &HCADecodeService::Main_Thread, this };
 }
 
@@ -23,12 +29,18 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       channels{ new clHCA::stChannel[0x10 * this->numthreads] },
       chunksize{ chunksize ? chunksize : 24 },
+      workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
+      mainsem{ 0 },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
       stopcurrent{ false }
 {
+    for (unsigned int i = 0; i < this->numthreads; ++i)
+    {
+        workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
+    }
     dispatchthread = std::thread{ &HCADecodeService::Main_Thread, this };
 }
 
@@ -39,6 +51,7 @@ HCADecodeService::~HCADecodeService()
     dispatchthread.join();
     delete[] wavebuffer;
     delete[] channels;
+    delete[] workersem;
     delete[] workerthreads;
 }
 
@@ -155,13 +168,10 @@ void HCADecodeService::Main_Thread()
 
         for (unsigned int i = 0; i < numthreads; ++i)
         {
-            workerthreads[i] = std::thread{ &HCADecodeService::Decode_Thread, this, i };
+            workersem[i].notify();
         }
-
-        for (unsigned int i = 0; i < numthreads; ++i)
-        {
-            workerthreads[i].join();
-        }
+        
+        wait_on_all_threads(mainsem);
     
         workingrequest = nullptr;
 
@@ -171,12 +181,17 @@ void HCADecodeService::Main_Thread()
 
 void HCADecodeService::Decode_Thread(unsigned int id)
 {
-    unsigned int offset = id * numchannels;
-    unsigned int bindex = currindex++;
-    while (bindex < blocks.size())
+    while (!shutdown)
     {
-        workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), blocks[bindex], workingrequest, chunksize, stopcurrent);
-        bindex = currindex++;
+        workersem[id].wait();
+        unsigned int offset = id * numchannels;
+        unsigned int bindex = currindex++;
+        while (bindex < blocks.size())
+        {
+            workingfile.AsyncDecode(channels + offset, wavebuffer + (offset << 7), blocks[bindex], workingrequest, chunksize, stopcurrent);
+            bindex = currindex++;
+        }
+        mainsem.notify();
     }
 }
 
@@ -199,5 +214,20 @@ void HCADecodeService::populate_block_list()
     for (unsigned int i = (startingblock / chunksize) * chunksize; i < lim; i += chunksize)
     {
         blocks.push_back(i % blockCount);
+    }
+}
+
+void HCADecodeService::wait_on_all_threads(Semaphore &sem)
+{
+    sem.wait(numthreads);
+    sem.notify(numthreads);
+}
+
+void HCADecodeService::join_workers()
+{
+    for (unsigned int i = 0; i < numthreads; ++i)
+    {
+        workersem[i].notify();
+        workerthreads[i].join();
     }
 }
