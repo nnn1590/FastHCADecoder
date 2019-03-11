@@ -3,7 +3,7 @@
 #define HCADECODESERVICE_H
 
 #include <thread>
-#include <deque>
+#include <vector>
 #include <map>
 #include <mutex>
 #include <atomic>
@@ -34,7 +34,7 @@ private:
     std::thread dispatchthread;
     std::thread *workerthreads;
     std::map<void *, std::pair<clHCA, unsigned int>> filelist;
-    std::deque<unsigned int> blocks;
+    std::vector<unsigned int> blocks;
     Semaphore *workersem;
     Semaphore datasem, mainsem;
     std::mutex filelistmtx, workingmtx;

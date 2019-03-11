@@ -213,6 +213,7 @@ void HCADecodeService::populate_block_list()
     blocks.clear();
     unsigned int blockCount = workingfile.get_blockCount();
     int sz = blockCount / chunksize + (blockCount % chunksize != 0);
+    blocks.reserve(sz);
     unsigned int lim = sz * chunksize + startingblock;
     for (unsigned int i = (startingblock / chunksize) * chunksize; i < lim; i += chunksize)
     {

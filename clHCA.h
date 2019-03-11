@@ -164,9 +164,11 @@ private:
     class clData {
     public:
         clData(void *data, int size);
+        ~clData();
         int CheckBit(int bitSize);
         int GetBit(int bitSize);
         void AddBit(int bitSize);
+        unsigned char *getData();
     private:
         unsigned char *_data;
         int _size;
@@ -196,11 +198,10 @@ private:
     private:
     unsigned int _mode;
     unsigned int _loopNum;
-    unsigned char *hcafileptr, *hcadata;
+    unsigned char *hcafileptr;
     unsigned int _wavheadersize;
     bool Decode(void *data, unsigned int size, unsigned int address);
-    void (*_modeFunction2)(clHCA *, unsigned int, void *, float *);
-    void (*_modeFunction)(float, void *);
+    void (*_modeFunction)(clHCA *, unsigned int, void *, float *);
     static void DecodeToMemory_DecodeModeFloat(float f, void *ptr);
     static void DecodeToMemory_DecodeMode8bit (float f, void *ptr);
     static void DecodeToMemory_DecodeMode16bit(float f, void *ptr);

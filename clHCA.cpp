@@ -53,7 +53,6 @@ clHCA &clHCA::operator=(clHCA &&other) noexcept
 {
     delete[] hcafileptr;
     hcafileptr = other.hcafileptr;
-    hcadata = other.hcadata;
     other.hcafileptr = nullptr;
     _version = other._version;
     _dataOffset = other._dataOffset;
@@ -91,7 +90,6 @@ clHCA &clHCA::operator=(clHCA &&other) noexcept
     _volume = other._volume;
     _mode = other._mode;
     _modeFunction = other._modeFunction;
-    _modeFunction2 = other._modeFunction2;
     _wavheadersize = other._wavheadersize;
     return *this;
 }
@@ -646,11 +644,11 @@ bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float vo
     wavRiff.riffSize = 0x1C + ((_loopFlg && !loop) ? sizeof(wavSmpl) : 0) + (_comm_comment ? 8 + wavNote.noteSize : 0) + sizeof(wavData) + wavData.dataSize;
 
     switch (mode) {
-    case 0:_modeFunction = DecodeToMemory_DecodeModeFloat; _modeFunction2 = DecodeToMemory_DecodeModeFloat; _mode = 32; break;
-    case 8:_modeFunction = DecodeToMemory_DecodeMode8bit; _modeFunction2 = DecodeToMemory_DecodeMode8bit; _mode = 8; break;
-    case 16:_modeFunction = DecodeToMemory_DecodeMode16bit; _modeFunction2 = DecodeToMemory_DecodeMode16bit; _mode = 16; break;
-    case 24:_modeFunction = DecodeToMemory_DecodeMode24bit; _modeFunction2 = DecodeToMemory_DecodeMode24bit; _mode = 24; break;
-    case 32:_modeFunction = DecodeToMemory_DecodeMode32bit; _modeFunction2 = DecodeToMemory_DecodeMode32bit; _mode = 32; break;
+    case 0:_modeFunction = DecodeToMemory_DecodeModeFloat; _mode = 32; break;
+    case 8:_modeFunction = DecodeToMemory_DecodeMode8bit; _mode = 8; break;
+    case 16:_modeFunction = DecodeToMemory_DecodeMode16bit; _mode = 16; break;
+    case 24:_modeFunction = DecodeToMemory_DecodeMode24bit; _mode = 24; break;
+    case 32:_modeFunction = DecodeToMemory_DecodeMode32bit; _mode = 32; break;
     }
 
     sz = wavRiff.riffSize + 8;
@@ -674,11 +672,9 @@ bool clHCA::Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float vo
     memcpy((char*)wavptr + seekhead, &wavData, sizeof(wavData));
     seekhead += sizeof(wavRiff);
     delete[] data1;
-    hcafileptr = new unsigned char[_blockCount * _blockSize + 1];
-    hcadata = hcafileptr + 1;
+    hcafileptr = new unsigned char[_blockCount * _blockSize];
     fseek(fp1, header.dataOffset, SEEK_SET);
-    fread(hcadata, _blockCount, _blockSize, fp1);
-    _cipher.Mask(hcadata, _blockCount * _blockSize);
+    fread(hcafileptr, _blockCount, _blockSize, fp1);
     _wavheadersize = wavRiff.riffSize - wavData.dataSize + 8;
     _loopNum = loop;
     // 閉じる
@@ -702,7 +698,8 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
     for (unsigned int currblock = blocknum ? blocknum - 1 : blocknum; currblock < endblock && currblock < _blockCount; ++currblock)
     {
         //        if(((unsigned char *)data)[_blockSize-2]==0x5E)_asm int 3
-        clData d(hcadata + (currblock * _blockSize), _blockSize);
+        clData d(hcafileptr + (currblock * _blockSize), _blockSize);
+        _cipher.Mask(d.getData(), _blockSize);
         int magic = d.GetBit(16); // Fixed as 0xFFFF
         if (magic == 0xFFFF) {
             int a = (d.GetBit(9) << 8) - d.GetBit(7);
@@ -720,7 +717,7 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
                 if (currblock >= blocknum)
                 {
                     unsigned int numsamples = _channelCount << 7;
-                    _modeFunction2(this, currblock, outwavptr, wavebuffer);
+                    _modeFunction(this, currblock, outwavptr, wavebuffer);
                     outwavptr += samplesize * numsamples;
                 }
             }
@@ -1078,7 +1075,14 @@ void clHCA::clCipher::Init56_CreateTable(unsigned char *r, unsigned char key) {
 //--------------------------------------------------
 // データ
 //--------------------------------------------------
-clHCA::clData::clData(void *data, int size) :_data((unsigned char *)data), _size(size * 8 - 24), _bit(-8) {}
+clHCA::clData::clData(void *data, int size) :_data(new unsigned char[size + 1]), _size(size * 8 - 16), _bit(0)
+{
+    memcpy(_data + 1, data, size);
+}
+clHCA::clData::~clData()
+{
+    delete[] _data;
+}
 int clHCA::clData::CheckBit(int bitSize) {
     int v = 0;
     if (bitSize <= _size - _bit)
@@ -1098,6 +1102,10 @@ int clHCA::clData::GetBit(int bitSize) {
 }
 void clHCA::clData::AddBit(int bitSize) {
     _bit += bitSize;
+}
+unsigned char *clHCA::clData::getData()
+{
+    return _data + 1;
 }
 
 //--------------------------------------------------
