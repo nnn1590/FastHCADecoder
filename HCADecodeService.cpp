@@ -178,6 +178,8 @@ void HCADecodeService::Main_Thread()
 
         workingmtx.unlock();
     }
+
+    join_workers();
 }
 
 void HCADecodeService::Decode_Thread(unsigned int id)
