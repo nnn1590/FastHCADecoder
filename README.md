@@ -4,6 +4,7 @@ This program is strictly for decoding to WAV quickly. If you need a HCA streamin
 
 ![Screenshot](https://i.imgur.com/H0olD9Q.png)
 ![Screenshot 2](https://i.imgur.com/v9kIBmF.png)
+
 Comparison between single and multi threaded modes of FastHCADecoder and the [hca decoder in C](https://github.com/Ishotihadus/hca). Tests were performed on Windows and Ubuntu with an i7-920. Your mileage may vary with different hardware/OS configurations.
 
 Sample file can be found here: https://kinomyu.github.io/bgm.hca
