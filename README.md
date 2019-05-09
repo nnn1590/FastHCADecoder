@@ -3,7 +3,8 @@
 This program is strictly for decoding to WAV quickly. If you need a HCA streaming library, consider using [libcgss](https://github.com/hozuki/libcgss).
 
 ![Screenshot](https://i.imgur.com/H0olD9Q.png)
-Comparison between single and multi threaded modes of FastHCADecoder and the [hca decoder in C](https://github.com/Ishotihadus/hca). Tests were performed on Windows with an i7-920. Your mileage may vary with different hardware/OS configurations. As you can see, there is still a lot of work to be done to achieve a higher scaling factor.
+![Screenshot 2](https://i.imgur.com/v9kIBmF.png)
+Comparison between single and multi threaded modes of FastHCADecoder and the [hca decoder in C](https://github.com/Ishotihadus/hca). Tests were performed on Windows and Ubuntu with an i7-920. Your mileage may vary with different hardware/OS configurations.
 
 Sample file can be found here: https://kinomyu.github.io/bgm.hca
 
