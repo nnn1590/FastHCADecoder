@@ -10,7 +10,7 @@ HCADecodeService::HCADecodeService()
       chunksize{ 24 },
       workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
-      mainsem{ this->numthreads },
+      mainsem{ 0 },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
@@ -31,7 +31,7 @@ HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksi
       chunksize{ chunksize ? chunksize : 24 },
       workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
-      mainsem{ this->numthreads },
+      mainsem{ 0 },
       numchannels{ 0 },
       workingrequest{ nullptr },
       shutdown{ false },
@@ -172,7 +172,6 @@ void HCADecodeService::Main_Thread()
         }
         
         mainsem.wait(numthreads);
-        wait_on_all_threads(mainsem);
     
         workingrequest = nullptr;
 
@@ -219,12 +218,6 @@ void HCADecodeService::populate_block_list()
     {
         blocks.push_back(i % blockCount);
     }
-}
-
-void HCADecodeService::wait_on_all_threads(Semaphore &sem)
-{
-    sem.wait(numthreads);
-    sem.notify(numthreads);
 }
 
 void HCADecodeService::join_workers()

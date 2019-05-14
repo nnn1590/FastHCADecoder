@@ -13,23 +13,17 @@
 // インライン関数
 //--------------------------------------------------
 #ifdef _MSC_VER
-#include <stdlib.h>
-// MSVC does not optimize these functions to bswap even on -O2
-inline short bswap(short v) { return _byteswap_ushort(v); }
-inline unsigned short bswap(unsigned short v) { return _byteswap_ushort(v); }
-inline int bswap(int v) { return _byteswap_ulong(v); }
-inline unsigned int bswap(unsigned int v) { return _byteswap_ulong(v); }
-inline long long bswap(long long v) { return _byteswap_uint64(v); }
-inline unsigned long long bswap(unsigned long long v) { return _byteswap_uint64(v); }
-#else
-// gcc and clang optimize these functions to bswap instructions
-inline short bswap(short v) { short r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
-inline unsigned short bswap(unsigned short v) { unsigned short r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
-inline int bswap(int v) { int r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
-inline unsigned int bswap(unsigned int v) { unsigned int r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
-inline long long bswap(long long v) { long long r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
-inline unsigned long long bswap(unsigned long long v) { unsigned long long r = v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; r <<= 8; v >>= 8; r |= v & 0xFF; return r; }
+#define __builtin_bswap16 _byteswap_ushort
+#define __builtin_bswap32 _byteswap_ulong
+#define __builtin_bswap64 _byteswap_uint64
 #endif // _MSC_VER
+inline short bswap(short v) { return __builtin_bswap16(v); }
+inline unsigned short bswap(unsigned short v) { return __builtin_bswap16(v); }
+inline int bswap(int v) { return __builtin_bswap32(v); }
+inline unsigned int bswap(unsigned int v) { return __builtin_bswap32(v); }
+inline long long bswap(long long v) { return __builtin_bswap64(v); }
+inline unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
+
 inline float bswap(float v) { unsigned int i = bswap(*(unsigned int *)&v); return *(float *)&i; }
 inline unsigned int ceil2(unsigned int a, unsigned int b) { return (b>0) ? (a / b + ((a%b) ? 1 : 0)) : 0; }
 template <class T> inline T clamp(T val, T min, T max) { return (val > max) ? max : (val < min) ? min : val; }
@@ -687,13 +681,6 @@ void clHCA::AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blo
     if (stop) return;
     unsigned int samplesize = _mode >> 3;
     char *outwavptr = (char *)outputwavptr + (samplesize * blocknum * _channelCount << 10) + _wavheadersize;
-    if (blocknum == 0)
-    {
-        for (unsigned int i = 0; i < _channelCount; ++i)
-        {
-            memset(channels[i].wav2, 0, 512); // Clear previous IMDCT result
-        }
-    }
     unsigned int endblock = blocknum + chunksize;
     for (unsigned int currblock = blocknum ? blocknum - 1 : blocknum; currblock < endblock && currblock < _blockCount; ++currblock)
     {
@@ -1087,10 +1074,10 @@ int clHCA::clData::CheckBit(int bitSize) {
     int v = 0;
     if (bitSize <= _size - _bit)
     {
-        static unsigned int mask[] = { 0xFFFFFF,0x7FFFFF,0x3FFFFF,0x1FFFFF,0x0FFFFF,0x07FFFF,0x03FFFF,0x01FFFF };
+        static unsigned int mask[] = { 0xFFFFFF00,0xFFFF7F00,0xFFFF3F00,0xFFFF1F00,0xFFFF0F00,0xFFFF0700,0xFFFF0300,0xFFFF0100 };
         unsigned int *data = (unsigned int *)&_data[_bit >> 3];
         unsigned int shift_bits = _bit & 7;
-        v = bswap(*data) & mask[shift_bits];
+        v = bswap(*data & mask[shift_bits]);
         v >>= 24 - shift_bits - bitSize;
     }
     return v;

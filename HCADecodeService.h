@@ -25,7 +25,6 @@ private:
     void Decode_Thread(unsigned int id);
     void load_next_request();
     void populate_block_list();
-    void wait_on_all_threads(Semaphore &sem);
     void join_workers();
 
     clHCA workingfile;
