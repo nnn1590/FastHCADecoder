@@ -4,15 +4,15 @@
 
 HCADecodeService::HCADecodeService()
     : numthreads{ std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1 },
-      workerthreads{ new std::thread[this->numthreads] },
-      wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
-      channels{ new clHCA::stChannel[0x10 * this->numthreads] },
+      numchannels{ 0 },
       chunksize{ 24 },
+      workingrequest{ nullptr },
+      workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
       mainsem{ 0 },
-      numchannels{ 0 },
-      workingrequest{ nullptr },
+      channels{ new clHCA::stChannel[0x10 * this->numthreads] },
+      wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       shutdown{ false },
       stopcurrent{ false }
 {
@@ -25,15 +25,15 @@ HCADecodeService::HCADecodeService()
 
 HCADecodeService::HCADecodeService(unsigned int numthreads, unsigned int chunksize)
     : numthreads{ numthreads ? numthreads : (std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1) },
-      workerthreads{ new std::thread[this->numthreads] },
-      wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
-      channels{ new clHCA::stChannel[0x10 * this->numthreads] },
+      numchannels{ 0 },
       chunksize{ chunksize ? chunksize : 24 },
+      workingrequest{ nullptr },
+      workerthreads{ new std::thread[this->numthreads] },
       workersem{ new Semaphore[this->numthreads]{} },
       datasem{ 0 },
       mainsem{ 0 },
-      numchannels{ 0 },
-      workingrequest{ nullptr },
+      channels{ new clHCA::stChannel[0x10 * this->numthreads] },
+      wavebuffer{ new float[0x10 * 0x80 * this->numthreads] },
       shutdown{ false },
       stopcurrent{ false }
 {
