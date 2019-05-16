@@ -160,7 +160,6 @@ void HCADecodeService::Main_Thread()
         filelistmtx.unlock();
 
         numchannels = workingfile.get_channelCount();
-        workingfile.PrepDecode(channels, numthreads);
 
         populate_block_list();
 
@@ -187,6 +186,7 @@ void HCADecodeService::Decode_Thread(unsigned int id)
     {
         workersem[id].wait();
         unsigned int offset = id * numchannels;
+		workingfile.PrepDecode(channels + offset);
         unsigned int bindex = currindex++;
         while (bindex < blocks.size())
         {

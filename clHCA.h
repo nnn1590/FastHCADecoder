@@ -192,7 +192,7 @@ private:
         void Decode4(int index, unsigned int a, unsigned int b, unsigned int c);
         void Decode5(float* wavebuffer, unsigned int channelCount, float volume);
     };
-    bool PrepDecode(stChannel* channels, unsigned int numthreads);
+    bool PrepDecode(stChannel* channels);
     bool Analyze(void *&wavptr, size_t &sz, const char *filenameHCA, float volume = 1.0f, int mode = 16, int loop = 0);
     void AsyncDecode(stChannel *channels, float *wavebuffer, unsigned int blocknum, void *outputwavptr, unsigned int chunksize, bool &stop);
     private:

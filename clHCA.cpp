@@ -1256,7 +1256,7 @@ bool clHCA::Decode(void *data, unsigned int size, unsigned int address) {
     return false;
 }
 
-bool clHCA::PrepDecode(stChannel* channels, unsigned int numthreads)
+bool clHCA::PrepDecode(stChannel* channels)
 {
     if (!(_comp_r01 == 1 && _comp_r02 == 15))return false;
     _comp_r09 = ceil2(_comp_r05 - (_comp_r06 + _comp_r07), _comp_r08);
@@ -1276,7 +1276,7 @@ bool clHCA::PrepDecode(stChannel* channels, unsigned int numthreads)
             }
         }
     }
-    for (unsigned int i = 0; i < _channelCount * numthreads; ++i)
+    for (unsigned int i = 0; i < _channelCount; ++i)
     {
         channels[i].type = r[i % _channelCount];
         channels[i].value3 = &channels[i].value[_comp_r06 + _comp_r07];
