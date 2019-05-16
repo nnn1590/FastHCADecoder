@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     unsigned int threads = 0;
     bool info = false;
     bool decrypt = false;
-    for (unsigned int i = 1; i<argc; ++i) {
+    for (int i = 1; i<argc; ++i) {
         if (argv[i][0] == '-' || argv[i][0] == '/') {
             switch (argv[i][1]) {
             case 'o':if (i + 1<argc) { filenameOut = argv[++i]; }break;
