@@ -3,7 +3,6 @@
 #define HCADECODESERVICE_H
 
 #include <thread>
-#include <vector>
 #include <map>
 #include <mutex>
 #include <atomic>
