@@ -1,9 +1,5 @@
 ﻿#pragma once
 
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_DEPRECATE
-#endif
-
 #ifndef CLHCA_H
 #define CLHCA_H
 
