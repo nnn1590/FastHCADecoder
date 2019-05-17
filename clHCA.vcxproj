@@ -159,14 +159,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="D:\Users\Admin\Documents\git\HCADecoder\clHCA.cpp" />
-    <ClCompile Include="D:\Users\Admin\Documents\git\HCADecoder\HCADecodeService.cpp" />
-    <ClCompile Include="D:\Users\Admin\Documents\git\HCADecoder\Source.cpp" />
+    <ClCompile Include=".\clHCA.cpp" />
+    <ClCompile Include=".\HCADecodeService.cpp" />
+    <ClCompile Include=".\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D:\Users\Admin\Documents\git\HCADecoder\clHCA.h" />
-    <ClInclude Include="D:\Users\Admin\Documents\git\HCADecoder\HCADecodeService.h" />
-    <ClInclude Include="D:\Users\Admin\Documents\git\HCADecoder\Semaphore.h" />
+    <ClInclude Include=".\clHCA.h" />
+    <ClInclude Include=".\HCADecodeService.h" />
+    <ClInclude Include=".\Semaphore.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
