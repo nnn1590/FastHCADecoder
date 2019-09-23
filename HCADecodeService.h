@@ -5,6 +5,7 @@
 #include <thread>
 #include <map>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 #include "Semaphore.h"
 #include "clHCA.h"
@@ -35,6 +36,7 @@ private:
 	Semaphore *workersem;
 	Semaphore datasem, mainsem;
 	std::mutex filelistmtx, workingmtx;
+	std::condition_variable workingcv;
 	clHCA::stChannel *channels;
 	float *wavebuffer;
 	bool shutdown, stopcurrent;

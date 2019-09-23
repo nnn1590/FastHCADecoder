@@ -89,23 +89,27 @@ void HCADecodeService::wait_on_request(void *ptr)
     {
         return;
     }
-    if (workingrequest == ptr)
-    {
-        std::lock_guard<std::mutex> lck(workingmtx);
-    }
     else
     {
         while (true)
         {
+			if (workingrequest == ptr)
+			{
+				std::unique_lock<std::mutex> lck(workingmtx);
+				workingcv.wait(lck);
+				break;
+			}
             filelistmtx.lock();
             auto it = filelist.find(ptr);
             if (it != filelist.end())
             {
                 filelistmtx.unlock();
-                std::lock_guard<std::mutex> lck(workingmtx);
+                std::unique_lock<std::mutex> lck(workingmtx);
+				workingcv.wait(lck);
             }
             else
             {
+
                 filelistmtx.unlock();
                 break;
             }
@@ -119,8 +123,8 @@ void HCADecodeService::wait_for_finish()
     while (!filelist.empty() || workingrequest)
     {
         filelistmtx.unlock();
-        workingmtx.lock();
-        workingmtx.unlock();
+		std::unique_lock<std::mutex> lck(workingmtx);
+		workingcv.wait(lck);
         filelistmtx.lock();
     }
     filelistmtx.unlock();
@@ -154,13 +158,14 @@ void HCADecodeService::Main_Thread()
     {
         datasem.wait();
 
+		std::unique_lock<std::mutex> lck(workingmtx);
         if (shutdown)
         {
             break;
         }
 
         filelistmtx.lock();
-        workingmtx.lock();
+
         load_next_request();
         filelistmtx.unlock();
 
@@ -179,7 +184,7 @@ void HCADecodeService::Main_Thread()
 
         workingrequest = nullptr;
 
-        workingmtx.unlock();
+		workingcv.notify_all();
     }
 
     join_workers();
