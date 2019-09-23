@@ -158,7 +158,6 @@ void HCADecodeService::Main_Thread()
     {
         datasem.wait();
 
-		std::unique_lock<std::mutex> lck(workingmtx);
         if (shutdown)
         {
             break;
@@ -184,6 +183,7 @@ void HCADecodeService::Main_Thread()
 
         workingrequest = nullptr;
 
+		std::unique_lock<std::mutex> lck(workingmtx);
 		workingcv.notify_all();
     }
 
