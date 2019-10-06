@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Ofast -pthread
 FastHCADecoder: *.cpp *.h
-	$(CXX) -o FastHCADecoder $(CXXFLAGS) *.cpp
+	$(CXX) -o clHCA $(CXXFLAGS) *.cpp
 
 clean:
-	rm FastHCADecoder
+	rm clHCA
