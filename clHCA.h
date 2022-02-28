@@ -1,101 +1,101 @@
 #pragma once
 
 //--------------------------------------------------
-// HCA(High Compression Audio)ƒNƒ‰ƒX
+// HCA(High Compression Audio)ã‚¯ãƒ©ã‚¹
 //--------------------------------------------------
 class clHCA {
 public:
 	clHCA(unsigned int ciphKey1 = 0xE0748978, unsigned int ciphKey2 = 0xCF222F1F);
 
-	// HCAƒ`ƒFƒbƒN
+	// HCAãƒã‚§ãƒƒã‚¯
 	static bool CheckFile(void *data, unsigned int size);
 
-	// ƒ`ƒFƒbƒNƒTƒ€
+	// ãƒã‚§ãƒƒã‚¯ã‚µãƒ 
 	static unsigned short CheckSum(void *data, int size, unsigned short sum = 0);
 
-	// ƒwƒbƒ_î•ñ‚ğƒRƒ“ƒ\[ƒ‹o—Í
+	// ãƒ˜ãƒƒãƒ€æƒ…å ±ã‚’ã‚³ãƒ³ã‚½ãƒ¼ãƒ«å‡ºåŠ›
 	bool PrintInfo(const char *filenameHCA);
 
-	// •œ†‰»
+	// å¾©å·åŒ–
 	bool Decrypt(const char *filenameHCA);
 
-	// ƒfƒR[ƒh‚µ‚ÄWAVEƒtƒ@ƒCƒ‹‚É•Û‘¶
+	// ãƒ‡ã‚³ãƒ¼ãƒ‰ã—ã¦WAVEãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜
 	bool DecodeToWavefile(const char *filenameHCA, const char *filenameWAV, float volume = 1, int mode = 16, int loop = 0);
 	bool DecodeToWavefileStream(void *fpHCA, const char *filenameWAV, float volume = 1, int mode = 16, int loop = 0);
 
-	// ƒGƒ“ƒR[ƒh‚µ‚ÄHCAƒtƒ@ƒCƒ‹‚É•Û‘¶
+	// ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã—ã¦HCAãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜
 	//bool EncodeFromWavefile(const char *filenameWAV,const char *filenameHCA,float volume=1);
 	//bool EncodeFromWavefileStream(void *fpWAV,const char *filenameHCA,float volume=1);
 
 private:
-	struct stHeader {//ƒtƒ@ƒCƒ‹î•ñ (•K{)
+	struct stHeader {//ãƒ•ã‚¡ã‚¤ãƒ«æƒ…å ± (å¿…é ˆ)
 		unsigned int hca;              // 'HCA'
-		unsigned short version;        // ƒo[ƒWƒ‡ƒ“Bv1.3‚Æv2.0‚Ì‘¶İ‚ğŠm”F
-		unsigned short dataOffset;     // ƒf[ƒ^ƒIƒtƒZƒbƒg
+		unsigned short version;        // ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã€‚v1.3ã¨v2.0ã®å­˜åœ¨ã‚’ç¢ºèª
+		unsigned short dataOffset;     // ãƒ‡ãƒ¼ã‚¿ã‚ªãƒ•ã‚»ãƒƒãƒˆ
 	};
-	struct stFormat {//ƒtƒH[ƒ}ƒbƒgî•ñ (•K{)
+	struct stFormat {//ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæƒ…å ± (å¿…é ˆ)
 		unsigned int fmt;              // 'fmt'
-		unsigned int channelCount : 8;   // ƒ`ƒƒƒ“ƒlƒ‹” 1`16
-		unsigned int samplingRate : 24;  // ƒTƒ“ƒvƒŠƒ“ƒOƒŒ[ƒg 1`0x7FFFFF
-		unsigned int blockCount;       // ƒuƒƒbƒN” 0ˆÈã
-		unsigned short muteHeader;     // æ“ª‚Ì–³‰¹•”•ª(ƒuƒƒbƒN”*0x400+0x80)
-		unsigned short muteFooter;     // ––”ö‚Ì–³‰¹ƒTƒ“ƒvƒ‹”
+		unsigned int channelCount : 8;   // ãƒãƒ£ãƒ³ãƒãƒ«æ•° 1ã€œ16
+		unsigned int samplingRate : 24;  // ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ãƒ¬ãƒ¼ãƒˆ 1ã€œ0x7FFFFF
+		unsigned int blockCount;       // ãƒ–ãƒ­ãƒƒã‚¯æ•° 0ä»¥ä¸Š
+		unsigned short muteHeader;     // å…ˆé ­ã®ç„¡éŸ³éƒ¨åˆ†(ãƒ–ãƒ­ãƒƒã‚¯æ•°*0x400+0x80)
+		unsigned short muteFooter;     // æœ«å°¾ã®ç„¡éŸ³ã‚µãƒ³ãƒ—ãƒ«æ•°
 	};
-	struct stCompress {//ˆ³kî•ñ (ˆ³kî•ñ‚©ƒfƒR[ƒhî•ñ‚Ì‚Ç‚¿‚ç‚©ˆê‚Â‚ª•K{)
+	struct stCompress {//åœ§ç¸®æƒ…å ± (åœ§ç¸®æƒ…å ±ã‹ãƒ‡ã‚³ãƒ¼ãƒ‰æƒ…å ±ã®ã©ã¡ã‚‰ã‹ä¸€ã¤ãŒå¿…é ˆ)
 		unsigned int comp;             // 'comp'
-		unsigned short blockSize;      // ƒuƒƒbƒNƒTƒCƒY(CBR‚Ì‚Æ‚«‚É—LŒøH) 8`0xFFFFA0‚Ì‚Æ‚«‚ÍVBR
-		unsigned char r01;             // •s–¾(1) 0`r02      v2.0Œ»İ1‚Ì‚İ‘Î‰
-		unsigned char r02;             // •s–¾(15) r01`0x1F  v2.0Œ»İ15‚Ì‚İ‘Î‰
-		unsigned char r03;             // •s–¾(1)(1)
-		unsigned char r04;             // •s–¾(1)(0)
-		unsigned char r05;             // •s–¾(0x80)(0x80)
-		unsigned char r06;             // •s–¾(0x80)(0x20)
-		unsigned char r07;             // •s–¾(0)(0x20)
-		unsigned char r08;             // •s–¾(0)(8)
-		unsigned char reserve1;        // —\–ñ
-		unsigned char reserve2;        // —\–ñ
+		unsigned short blockSize;      // ãƒ–ãƒ­ãƒƒã‚¯ã‚µã‚¤ã‚º(CBRã®ã¨ãã«æœ‰åŠ¹ï¼Ÿ) 8ã€œ0xFFFFã€0ã®ã¨ãã¯VBR
+		unsigned char r01;             // ä¸æ˜(1) 0ã€œr02      v2.0ç¾åœ¨1ã®ã¿å¯¾å¿œ
+		unsigned char r02;             // ä¸æ˜(15) r01ã€œ0x1F  v2.0ç¾åœ¨15ã®ã¿å¯¾å¿œ
+		unsigned char r03;             // ä¸æ˜(1)(1)
+		unsigned char r04;             // ä¸æ˜(1)(0)
+		unsigned char r05;             // ä¸æ˜(0x80)(0x80)
+		unsigned char r06;             // ä¸æ˜(0x80)(0x20)
+		unsigned char r07;             // ä¸æ˜(0)(0x20)
+		unsigned char r08;             // ä¸æ˜(0)(8)
+		unsigned char reserve1;        // äºˆç´„
+		unsigned char reserve2;        // äºˆç´„
 	};
-	struct stDecode {//ƒfƒR[ƒhî•ñ (ˆ³kî•ñ‚©ƒfƒR[ƒhî•ñ‚Ì‚Ç‚¿‚ç‚©ˆê‚Â‚ª•K{)
+	struct stDecode {//ãƒ‡ã‚³ãƒ¼ãƒ‰æƒ…å ± (åœ§ç¸®æƒ…å ±ã‹ãƒ‡ã‚³ãƒ¼ãƒ‰æƒ…å ±ã®ã©ã¡ã‚‰ã‹ä¸€ã¤ãŒå¿…é ˆ)
 		unsigned int dec;              // 'dec'
-		unsigned short blockSize;      // ƒuƒƒbƒNƒTƒCƒY(CBR‚Ì‚Æ‚«‚É—LŒøH) 8`0xFFFFA0‚Ì‚Æ‚«‚ÍVBR
-		unsigned char r01;             // •s–¾(1) 0`r02      v2.0Œ»İ1‚Ì‚İ‘Î‰
-		unsigned char r02;             // •s–¾(15) r01`0x1F  v2.0Œ»İ15‚Ì‚İ‘Î‰
-		unsigned char count1;          // type0‚Ætype1‚Ì”-1
-		unsigned char count2;          // type2‚Ì”-1
-		unsigned char r03 : 4;           // •s–¾(0)
-		unsigned char r04 : 4;           // •s–¾(0) 0‚Í1‚ÉC³‚³‚ê‚é
-		unsigned char enableCount2;    // count2‚ğg‚¤ƒtƒ‰ƒO
+		unsigned short blockSize;      // ãƒ–ãƒ­ãƒƒã‚¯ã‚µã‚¤ã‚º(CBRã®ã¨ãã«æœ‰åŠ¹ï¼Ÿ) 8ã€œ0xFFFFã€0ã®ã¨ãã¯VBR
+		unsigned char r01;             // ä¸æ˜(1) 0ã€œr02      v2.0ç¾åœ¨1ã®ã¿å¯¾å¿œ
+		unsigned char r02;             // ä¸æ˜(15) r01ã€œ0x1F  v2.0ç¾åœ¨15ã®ã¿å¯¾å¿œ
+		unsigned char count1;          // type0ã¨type1ã®æ•°-1
+		unsigned char count2;          // type2ã®æ•°-1
+		unsigned char r03 : 4;           // ä¸æ˜(0)
+		unsigned char r04 : 4;           // ä¸æ˜(0) 0ã¯1ã«ä¿®æ­£ã•ã‚Œã‚‹
+		unsigned char enableCount2;    // count2ã‚’ä½¿ã†ãƒ•ãƒ©ã‚°
 	};
-	struct stVBR {//‰Â•ÏƒrƒbƒgƒŒ[ƒgî•ñ (”p~H)
+	struct stVBR {//å¯å¤‰ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆæƒ…å ± (å»ƒæ­¢ï¼Ÿ)
 		unsigned int vbr;              // 'vbr'
-		unsigned short r01;            // •s–¾ 0`0x1FF
-		unsigned short r02;            // •s–¾
+		unsigned short r01;            // ä¸æ˜ 0ã€œ0x1FF
+		unsigned short r02;            // ä¸æ˜
 	};
-	struct stATH {//ATHƒe[ƒuƒ‹î•ñ (v2.0‚©‚ç”p~H)
+	struct stATH {//ATHãƒ†ãƒ¼ãƒ–ãƒ«æƒ…å ± (v2.0ã‹ã‚‰å»ƒæ­¢ï¼Ÿ)
 		unsigned int ath;              // 'ath'
-		unsigned short type;           // ƒe[ƒuƒ‹‚Ìí—Ş(0:‘S‚Ä0 1:ƒe[ƒuƒ‹1)
+		unsigned short type;           // ãƒ†ãƒ¼ãƒ–ãƒ«ã®ç¨®é¡(0:å…¨ã¦0 1:ãƒ†ãƒ¼ãƒ–ãƒ«1)
 	};
-	struct stLoop {//ƒ‹[ƒvî•ñ
+	struct stLoop {//ãƒ«ãƒ¼ãƒ—æƒ…å ±
 		unsigned int loop;             // 'loop'
-		unsigned int start;            // ƒ‹[ƒvŠJnƒuƒƒbƒNƒCƒ“ƒfƒbƒNƒX 0`loopEnd
-		unsigned int end;              // ƒ‹[ƒvI—¹ƒuƒƒbƒNƒCƒ“ƒfƒbƒNƒX loopStart`(stFormat::blockCount-1)
-		unsigned short count;          // ƒ‹[ƒv‰ñ” 0x80‚Å–³ŒÀƒ‹[ƒv
-		unsigned short r01;            // •s–¾(0x226) 
+		unsigned int start;            // ãƒ«ãƒ¼ãƒ—é–‹å§‹ãƒ–ãƒ­ãƒƒã‚¯ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ 0ã€œloopEnd
+		unsigned int end;              // ãƒ«ãƒ¼ãƒ—çµ‚äº†ãƒ–ãƒ­ãƒƒã‚¯ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ loopStartã€œ(stFormat::blockCount-1)
+		unsigned short count;          // ãƒ«ãƒ¼ãƒ—å›æ•° 0x80ã§ç„¡é™ãƒ«ãƒ¼ãƒ—
+		unsigned short r01;            // ä¸æ˜(0x226) 
 	};
-	struct stCipher {//ˆÃ†ƒe[ƒuƒ‹î•ñ
+	struct stCipher {//æš—å·ãƒ†ãƒ¼ãƒ–ãƒ«æƒ…å ±
 		unsigned int ciph;             // 'ciph'
-		unsigned short type;           // ˆÃ†‰»‚Ìí—Ş(0:ˆÃ†‰»‚È‚µ 1:Œ®‚È‚µˆÃ†‰» 0x38:Œ®‚ ‚èˆÃ†‰»)
+		unsigned short type;           // æš—å·åŒ–ã®ç¨®é¡(0:æš—å·åŒ–ãªã— 1:éµãªã—æš—å·åŒ– 0x38:éµã‚ã‚Šæš—å·åŒ–)
 	};
-	struct stRVA {//‘Š‘Îƒ{ƒŠƒ…[ƒ€’²ßî•ñ
+	struct stRVA {//ç›¸å¯¾ãƒœãƒªãƒ¥ãƒ¼ãƒ èª¿ç¯€æƒ…å ±
 		unsigned int rva;              // 'rva'
-		float volume;                  // ƒ{ƒŠƒ…[ƒ€
+		float volume;                  // ãƒœãƒªãƒ¥ãƒ¼ãƒ 
 	};
-	struct stComment {//ƒRƒƒ“ƒgî•ñ
+	struct stComment {//ã‚³ãƒ¡ãƒ³ãƒˆæƒ…å ±
 		unsigned int comm;             // 'comm'
-		unsigned char len;             // ƒRƒƒ“ƒg‚Ì’·‚³H
+		unsigned char len;             // ã‚³ãƒ¡ãƒ³ãƒˆã®é•·ã•ï¼Ÿ
 																	 //char comment[];
 	};
-	struct stPadding {//ƒpƒfƒBƒ“ƒO
+	struct stPadding {//ãƒ‘ãƒ‡ã‚£ãƒ³ã‚°
 		unsigned int pad;              // 'pad'
 	};
 	unsigned int _version;
