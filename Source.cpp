@@ -2,9 +2,12 @@
 //--------------------------------------------------
 // インクルード
 //--------------------------------------------------
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <windows.h>
+#endif
 #include <stdio.h>
+#include <string.h>
 #include "clHCA.h"
 
 //--------------------------------------------------
@@ -21,7 +24,7 @@ int atoi(const char *s) {
 	}
 	return sign ? -r : r;
 }
-float atof(const char *s) {
+double atof(const char *s) {
 	int r1 = 0, r2 = 0, c = 1;
 	bool sign = false; if (*s == '+') { s++; }
 	else if (*s == '-') { sign = true; s++; }
@@ -76,7 +79,11 @@ int main(int argc, char *argv[]) {
 	bool info = false;
 	bool decrypt = false;
 	for (int i = 1; i<argc; i++) {
+#ifdef _WIN32
 		if (argv[i][0] == '-' || argv[i][0] == '/') {
+#else
+		if (argv[i][0] == '-') {
+#endif
 			switch (argv[i][1]) {
 			case 'o':if (i + 1<argc) { filenameOut = argv[++i]; }break;
 				//case 'd':decodeFlg=true;break;
@@ -109,14 +116,15 @@ int main(int argc, char *argv[]) {
 		if (i)filenameOut = NULL;
 
 		// デフォルト出力ファイル名
-		char path[MAX_PATH];
+		const char* defaultExt = ".wav";
+		char path[strlen(argv[i]) + strlen(defaultExt) + 1];
 		if (!(filenameOut&&filenameOut[0])) {
-			strcpy_s(path, sizeof(path), argv[i]);
+			strcpy(path, argv[i]);
 			char *d1 = strrchr(path, '\\');
 			char *d2 = strrchr(path, '/');
 			char *e = strrchr(path, '.');
 			if (e&&d1<e&&d2<e)*e = '\0';
-			strcat_s(path, sizeof(path), ".wav");
+			strcat(path, defaultExt);
 			filenameOut = path;
 		}
 

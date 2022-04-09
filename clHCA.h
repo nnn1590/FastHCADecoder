@@ -182,7 +182,7 @@ private:
 		void Decode5(int index);
 	}_channel[0x10];
 	bool Decode(void *data, unsigned int size, unsigned int address);
-	bool DecodeToWavefile_Decode(void *fp1, void *fp2, unsigned int address, unsigned int count, void *data, void *modeFunction);
+	bool DecodeToWavefile_Decode(void *fp1, void *fp2, unsigned int address, unsigned int count, void *data, void (*modeFunction)(float, void*));
 	static void DecodeToWavefile_DecodeModeFloat(float f, void *fp);
 	static void DecodeToWavefile_DecodeMode8bit(float f, void *fp);
 	static void DecodeToWavefile_DecodeMode16bit(float f, void *fp);

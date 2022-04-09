@@ -66,8 +66,8 @@ bool clHCA::PrintInfo(const char *filenameHCA) {
 	if (!(filenameHCA))return false;
 
 	// HCAファイルを開く
-	FILE *fp;
-	if (fopen_s(&fp, filenameHCA, "rb")) {
+	FILE *fp = fopen(filenameHCA, "rb");
+	if (fp == NULL) {
 		printf("Error: ファイルが開けませんでした。\n");
 		return false;
 	}
@@ -314,8 +314,8 @@ bool clHCA::Decrypt(const char *filenameHCA) {
 	if (!(filenameHCA))return false;
 
 	// HCAファイルを開く
-	FILE *fp;
-	if (fopen_s(&fp, filenameHCA, "r+b"))return false;
+	FILE *fp = fopen(filenameHCA, "r+b");
+	if (fp == NULL) return false;
 
 	// ヘッダチェック
 	stHeader header;
@@ -465,8 +465,8 @@ bool clHCA::DecodeToWavefile(const char *filenameHCA, const char *filenameWAV, f
 	if (!(filenameHCA))return false;
 
 	// HCAファイルを開く
-	FILE *fp;
-	if (fopen_s(&fp, filenameHCA, "rb"))return false;
+	FILE *fp = fopen(filenameHCA, "rb");
+	if (fp == NULL)return false;
 
 	// 保存
 	if (!DecodeToWavefileStream(fp, filenameWAV, volume, mode, loop)) { fclose(fp); return false; }
@@ -500,8 +500,8 @@ bool clHCA::DecodeToWavefileStream(void *fpHCA, const char *filenameWAV, float v
 	if (!Decode(data1, header.dataOffset, 0)) { delete[] data1; return false; }
 
 	// WAVEファイルを開く
-	FILE *fp2;
-	if (fopen_s(&fp2, filenameWAV, "wb")) { delete[] data1; return false; }
+	FILE *fp2 = fopen(filenameWAV, "wb");
+	if (fp2 == NULL) { delete[] data1; return false; }
 
 	// WAVEヘッダを書き込み
 	struct stWAVEHeader {
@@ -583,7 +583,7 @@ bool clHCA::DecodeToWavefileStream(void *fpHCA, const char *filenameWAV, float v
 	_rva_volume *= volume;
 
 	// デコード
-	void *modeFunction = DecodeToWavefile_DecodeMode16bit;
+	void (*modeFunction)(float, void*) = DecodeToWavefile_DecodeMode16bit;
 	switch (mode) {
 	case 0:modeFunction = DecodeToWavefile_DecodeModeFloat; break;
 	case 8:modeFunction = DecodeToWavefile_DecodeMode8bit; break;
@@ -613,7 +613,7 @@ bool clHCA::DecodeToWavefileStream(void *fpHCA, const char *filenameWAV, float v
 
 	return true;
 }
-bool clHCA::DecodeToWavefile_Decode(void *fp1, void *fp2, unsigned int address, unsigned int count, void *data, void *modeFunction) {
+bool clHCA::DecodeToWavefile_Decode(void *fp1, void *fp2, unsigned int address, unsigned int count, void *data, void (*modeFunction)(float, void*)) {
 	float f;
 	fseek((FILE *)fp1, address, SEEK_SET);
 	for (unsigned int l = 0; l<count; l++, address += _blockSize) {
