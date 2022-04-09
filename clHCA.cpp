@@ -466,7 +466,7 @@ bool clHCA::DecodeToWavefile(const char *filenameHCA, const char *filenameWAV, f
 
 	// HCAファイルを開く
 	FILE *fp = fopen(filenameHCA, "rb");
-	if (fp == NULL)return false;
+	if (fp == NULL) return false;
 
 	// 保存
 	if (!DecodeToWavefileStream(fp, filenameWAV, volume, mode, loop)) { fclose(fp); return false; }
