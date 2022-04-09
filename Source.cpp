@@ -24,7 +24,7 @@ int atoi(const char *s) {
 	}
 	return sign ? -r : r;
 }
-double atof(const char *s) {
+float atof(const char *s) {
 	int r1 = 0, r2 = 0, c = 1;
 	bool sign = false; if (*s == '+') { s++; }
 	else if (*s == '-') { sign = true; s++; }
